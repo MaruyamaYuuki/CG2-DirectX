@@ -1,4 +1,5 @@
 #include <Windows.h>
+#include <cmath>
 #include <cstdint>
 #include <string>
 #include <format>
@@ -671,8 +672,10 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	Vector4* materialData = nullptr;
 	// 書き込むためのアドレスと取得
 	materialResource->Map(0, nullptr, reinterpret_cast<void**>(&materialData));
+
+	Vector4 color{ 1.0f,0.0f,0.0f,1.0f };
 	// 今回は赤を書き込む
-	*materialData = Vector4(1.0f, 0.0f, 0.0f, 1.0f);
+	*materialData = color;
 
 	// WVP用のリソースを作る
 	ID3D12Resource* wvpResource = CreateBuffurResource(device, sizeof(Matrix4x4));
@@ -735,8 +738,6 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 		srvDescriptorHeap,
 		srvDescriptorHeap->GetCPUDescriptorHandleForHeapStart(),
 		srvDescriptorHeap->GetGPUDescriptorHandleForHeapStart());
-
-	Vector4 color{ 1.0f,0.0f,0.0f,1.0f };
 
 	// 出力ウィンドウへの文字出力
 	Log("Hello,DirectX!\n");
