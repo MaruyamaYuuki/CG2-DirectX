@@ -736,6 +736,8 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 		srvDescriptorHeap->GetCPUDescriptorHandleForHeapStart(),
 		srvDescriptorHeap->GetGPUDescriptorHandleForHeapStart());
 
+	Vector4 color{ 1.0f,0.0f,0.0f,1.0f };
+
 	// 出力ウィンドウへの文字出力
 	Log("Hello,DirectX!\n");
 
@@ -754,7 +756,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 		    ImGui::NewFrame();
 
 			// ゲーム処理
-			transform.rotate.y += 0.03f;
+			//transform.rotate.y += 0.03f;
 			Matrix4x4 worldMatrix = MakeAffineMatrix(transform.scale, transform.rotate, transform.translate);
 			Matrix4x4 cameraMatrix = MakeAffineMatrix(cameraTransform.scale, cameraTransform.rotate, cameraTransform.translate);
 			Matrix4x4 viewMatrix = Inverse(cameraMatrix);
@@ -763,7 +765,15 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 			*wvpData = worldViewProjectionMatrix;
 
 			// 開発用UIの処理
-			ImGui::ShowDemoWindow();
+			//ImGui::ShowDemoWindow();
+
+			ImGui::Begin("Triangle Color Settings");
+			static ImVec4 triangleColor = ImVec4(color.x, color.y, color.z, color.w); // 初期値は白色
+			ImGui::ColorEdit3("Triangle Color", (float*)&triangleColor); // 色を編集
+			ImGui::End();
+
+			color = { triangleColor.x, triangleColor.y, triangleColor.z, 1.0f };
+			*materialData = color;
 
 			// ImGuiの内部コマンドを発生する
 			ImGui::Render();
