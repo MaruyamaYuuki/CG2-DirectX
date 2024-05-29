@@ -768,9 +768,33 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 			// 開発用UIの処理
 			//ImGui::ShowDemoWindow();
 
-			ImGui::Begin("Triangle Color Settings");
+			ImGui::Begin("Color");
 			static ImVec4 triangleColor = ImVec4(color.x, color.y, color.z, color.w); // 初期値は白色
-			ImGui::ColorEdit3("Triangle Color", (float*)&triangleColor); // 色を編集
+
+
+			if (ImGui::CollapsingHeader("Settings", ImGuiTreeNodeFlags_DefaultOpen)) {
+
+				// 移動の変更
+				ImGui::DragFloat3("Translation", &transform.translate.x, 0.01f);
+				// 回転の変更
+				ImGui::DragFloat3("Rotation", &transform.rotate.x, 0.01f);
+				// スケールの変更
+				ImGui::DragFloat3("Scale", &transform.scale.x, 0.01f);
+
+
+				if (ImGui::Button("Reset Transform")) {
+					// SRTをデフォルト値にリセットする
+					transform = { {1.0f, 1.0f, 1.0f}, {0.0f, 0.0f, 0.0f}, {0.0f, 0.0f, 0.0f} };
+				}
+				
+				if (ImGui::TreeNode("Material")) {
+			        ImGui::ColorEdit3("Triangle Color", (float*)&triangleColor); // 色を編集
+					ImGui::TreePop();
+				}
+				
+
+			}
+
 			ImGui::End();
 
 			color = { triangleColor.x, triangleColor.y, triangleColor.z, 1.0f };
