@@ -917,6 +917,8 @@ CoInitializeEx(0, COINIT_MULTITHREADED);
 	pixelShaderBlob->Release();
 	vertexShaderBlob->Release();
 	materialResource->Release();
+	wvpResource->Release();
+	srvDescriptorHeap->Release();
 
 #ifdef _DEBUG
 	debugController->Release();
