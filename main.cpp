@@ -342,6 +342,8 @@ struct Vector4 { float x, y, z, w; };
 // Windowsアプリでのエントリーポイント(main関数)
 int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 
+CoInitializeEx(0, COINIT_MULTITHREADED);
+
 #pragma region windowの生成
 	WNDCLASS wc{};
 	// ウィンドウプロシージャ
@@ -768,11 +770,11 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 			// 開発用UIの処理
 			//ImGui::ShowDemoWindow();
 
-			ImGui::Begin("Color");
+			ImGui::Begin("Setting");
 			static ImVec4 triangleColor = ImVec4(color.x, color.y, color.z, color.w); // 初期値は白色
 
 
-			if (ImGui::CollapsingHeader("Settings", ImGuiTreeNodeFlags_DefaultOpen)) {
+			if (ImGui::CollapsingHeader("Option", ImGuiTreeNodeFlags_DefaultOpen)) {
 
 				// 移動の変更
 				ImGui::DragFloat3("Translation", &transform.translate.x, 0.01f);
@@ -788,7 +790,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 				}
 				
 				if (ImGui::TreeNode("Material")) {
-			        ImGui::ColorEdit3("Triangle Color", (float*)&triangleColor); // 色を編集
+			        ImGui::ColorEdit3("Color", (float*)&triangleColor); // 色を編集
 					ImGui::TreePop();
 				}
 				
@@ -886,6 +888,8 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 			assert(SUCCEEDED(hr));
 		}
 	}
+
+	CoUninitialize();
 
 	ImGui_ImplDX12_Shutdown();
 	ImGui_ImplWin32_Shutdown();
