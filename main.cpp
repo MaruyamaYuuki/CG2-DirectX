@@ -945,104 +945,77 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 
 	float pi = float(M_PI);
 	// 球の分割数
+// 頂点リソースを作る
 	const uint32_t kSubdivision = 160;
-	const uint32_t kDivision = kSubdivision * kSubdivision * 6;
-
-	// 頂点リソースを作る
+	const uint32_t kDivision = (kSubdivision + 1) * (kSubdivision + 1);
 	ID3D12Resource* vertexResource = CreateBufferResource(device, sizeof(VertexData) * kDivision);
 
 	// 頂点バッファビューを作成する
 	D3D12_VERTEX_BUFFER_VIEW vertexBufferView{};
-	// リソースの先頭のアドレスから使う
 	vertexBufferView.BufferLocation = vertexResource->GetGPUVirtualAddress();
-	// 使用するリソースのサイズは頂点３つ分のサイズ
 	vertexBufferView.SizeInBytes = sizeof(VertexData) * kDivision;
-	// 1頂点あたりのサイズ
 	vertexBufferView.StrideInBytes = sizeof(VertexData);
 
 	// 頂点リソースにデータを書き込む
 	VertexData* vertexData = nullptr;
-	// 書き込むためのアドレスを取得
 	vertexResource->Map(0, nullptr, reinterpret_cast<void**>(&vertexData));
 
 	// 経度分割1つ分の角度φ
-	const float kLonEvery = pi * 2.0f / float(kSubdivision);
+	const float kLonEvery = 2.0f * pi / float(kSubdivision);
 	// 緯度分割1つ分の角度θ
 	const float kLatEvery = pi / float(kSubdivision);
-	// 緯度の咆哮に分割
-	for (uint32_t latIndex = 0; latIndex < kSubdivision; ++latIndex) {
-		float lat = -pi / 2.0f + kLatEvery * latIndex;// θ
-		//経度の咆哮に分割しながら線を描く
-		for (uint32_t lonIndex = 0; lonIndex < kSubdivision; ++lonIndex) {
-			uint32_t start = (latIndex * kSubdivision + lonIndex) * 6;
-			float lon = float(lonIndex * kLonEvery);
-			// 頂点にデータを入力する。基準点a
-			vertexData[start].position.x = cos(lat) * cos(lon);
-			vertexData[start].position.y = sin(lat);
-			vertexData[start].position.z = cos(lat) * sin(lon);
-			vertexData[start].position.w = 1.0f;
-			vertexData[start].texcoord.x = float(lonIndex) / float(kSubdivision);
-			vertexData[start].texcoord.y = 1.0f - float(latIndex) / float(kSubdivision);
-			vertexData[start].normal.x = vertexData[start].position.x;
-			vertexData[start].normal.y = vertexData[start].position.y;
-			vertexData[start].normal.z = vertexData[start].position.z;
 
-			// b
-			vertexData[start + 1].position.x = cos(lat + kLatEvery) * cos(lon);
-			vertexData[start + 1].position.y = sin(lat + kLatEvery);
-			vertexData[start + 1].position.z = cos(lat + kLatEvery) * sin(lon);
-			vertexData[start + 1].position.w = 1.0f;
-			vertexData[start + 1].texcoord.x = float(lonIndex) / float(kSubdivision);
-			vertexData[start + 1].texcoord.y = 1.0f - float(latIndex + 1) / float(kSubdivision);
-			vertexData[start + 1].normal.x = vertexData[start].position.x;
-			vertexData[start + 1].normal.y = vertexData[start].position.y;
-			vertexData[start + 1].normal.z = vertexData[start].position.z;
+	// 頂点データを作成
+	for (uint32_t latIndex = 0; latIndex <= kSubdivision; ++latIndex) {
+		float lat = -pi / 2.0f + kLatEvery * latIndex;
+		for (uint32_t lonIndex = 0; lonIndex <= kSubdivision; ++lonIndex) {
+			float lon = kLonEvery * lonIndex;
+			uint32_t index = latIndex * (kSubdivision + 1) + lonIndex;
 
-			// c
-			vertexData[start + 2].position.x = cos(lat) * cos(lon + kLonEvery);
-			vertexData[start + 2].position.y = sin(lat);
-			vertexData[start + 2].position.z = cos(lat) * sin(lon + kLonEvery);
-			vertexData[start + 2].position.w = 1.0f;
-			vertexData[start + 2].texcoord.x = float((lonIndex + 1) % kSubdivision) / float(kSubdivision);
-			vertexData[start + 2].texcoord.y = 1.0f - float(latIndex) / float(kSubdivision);
-			vertexData[start + 2].normal.x = vertexData[start].position.x;
-			vertexData[start + 2].normal.y = vertexData[start].position.y;
-			vertexData[start + 2].normal.z = vertexData[start].position.z;
-
-			// c
-			vertexData[start + 3].position.x = cos(lat) * cos(lon + kLonEvery);
-			vertexData[start + 3].position.y = sin(lat);
-			vertexData[start + 3].position.z = cos(lat) * sin(lon + kLonEvery);
-			vertexData[start + 3].position.w = 1.0f;
-			vertexData[start + 3].texcoord.x = float((lonIndex + 1) % kSubdivision) / float(kSubdivision);
-			vertexData[start + 3].texcoord.y = 1.0f - float(latIndex) / float(kSubdivision);
-			vertexData[start + 3].normal.x = vertexData[start].position.x;
-			vertexData[start + 3].normal.y = vertexData[start].position.y;
-			vertexData[start + 3].normal.z = vertexData[start].position.z;
-
-			// b
-			vertexData[start + 4].position.x = cos(lat + kLatEvery) * cos(lon);
-			vertexData[start + 4].position.y = sin(lat + kLatEvery);
-			vertexData[start + 4].position.z = cos(lat + kLatEvery) * sin(lon);
-			vertexData[start + 4].position.w = 1.0f;
-			vertexData[start + 4].texcoord.x = float(lonIndex) / float(kSubdivision);
-			vertexData[start + 4].texcoord.y = 1.0f - float(latIndex + 1) / float(kSubdivision);
-			vertexData[start + 4].normal.x = vertexData[start].position.x;
-			vertexData[start + 4].normal.y = vertexData[start].position.y;
-			vertexData[start + 4].normal.z = vertexData[start].position.z;
-
-			// d
-			vertexData[start + 5].position.x = cos(lat + kLatEvery) * cos(lon + kLonEvery);
-			vertexData[start + 5].position.y = sin(lat + kLatEvery);
-			vertexData[start + 5].position.z = cos(lat + kLatEvery) * sin(lon + kLonEvery);
-			vertexData[start + 5].position.w = 1.0f;
-			vertexData[start + 5].texcoord.x = float((lonIndex + 1) % kSubdivision) / float(kSubdivision);
-			vertexData[start + 5].texcoord.y = 1.0f - float(latIndex + 1) / float(kSubdivision);
-			vertexData[start + 5].normal.x = vertexData[start].position.x;
-			vertexData[start + 5].normal.y = vertexData[start].position.y;
-			vertexData[start + 5].normal.z = vertexData[start].position.z;
+			vertexData[index].position.x = cos(lat) * cos(lon);
+			vertexData[index].position.y = sin(lat);
+			vertexData[index].position.z = cos(lat) * sin(lon);
+			vertexData[index].position.w = 1.0f;
+			vertexData[index].texcoord.x = float(lonIndex) / float(kSubdivision);
+			vertexData[index].texcoord.y = 1.0f - float(latIndex) / float(kSubdivision);
+			vertexData[index].normal.x = vertexData[index].position.x;
+			vertexData[index].normal.y = vertexData[index].position.y;
+			vertexData[index].normal.z = vertexData[index].position.z;
 		}
 	}
+
+	const uint32_t kNumIndices = kSubdivision * kSubdivision * 6;
+	ID3D12Resource* indexResource = CreateBufferResource(device, sizeof(uint32_t) * kNumIndices);
+
+	// インデックスバッファビューを作成する
+	D3D12_INDEX_BUFFER_VIEW indexBufferView{};
+	indexBufferView.BufferLocation = indexResource->GetGPUVirtualAddress();
+	indexBufferView.SizeInBytes = sizeof(uint32_t) * kNumIndices;
+	indexBufferView.Format = DXGI_FORMAT_R32_UINT;
+
+	// インデックスリソースにデータを書き込む
+	uint32_t* indexData = nullptr;
+	indexResource->Map(0, nullptr, reinterpret_cast<void**>(&indexData));
+
+	// インデックスデータを作成
+	uint32_t index = 0;
+	for (uint32_t latIndex = 0; latIndex < kSubdivision; ++latIndex) {
+		for (uint32_t lonIndex = 0; lonIndex < kSubdivision; ++lonIndex) {
+			uint32_t topLeft = latIndex * (kSubdivision + 1) + lonIndex;
+			uint32_t bottomLeft = (latIndex + 1) * (kSubdivision + 1) + lonIndex;
+
+			// 三角形1
+			indexData[index++] = topLeft;
+			indexData[index++] = bottomLeft;
+			indexData[index++] = topLeft + 1;
+
+			// 三角形2
+			indexData[index++] = topLeft + 1;
+			indexData[index++] = bottomLeft;
+			indexData[index++] = bottomLeft + 1;
+		}
+	}
+
 
 	// Sprite用のリソースを作る
 	ID3D12Resource* vertexRsourceSprite = CreateBufferResource(device, sizeof(VertexData) * 4);
@@ -1298,6 +1271,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 			commandList->SetGraphicsRootSignature(rootSignature);
 			commandList->SetPipelineState(graphicsPipelineState);
 			commandList->IASetVertexBuffers(0, 1, &vertexBufferView);
+			commandList->IASetIndexBuffer(&indexBufferView);
 
 			// 形状を設定
 			commandList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
@@ -1310,7 +1284,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 			// SRVのDescriptorTableの先頭を設定
 			commandList->SetGraphicsRootDescriptorTable(2, useMonsterBall ? textureSrvHandleGPU2 : textureSrvHandleGPU);
 			// 描画
-			commandList->DrawInstanced(kDivision, 1, 0, 0);
+			commandList->DrawIndexedInstanced(kNumIndices, 1, 0, 0, 0);
 
 			commandList->SetGraphicsRootDescriptorTable(2, textureSrvHandleGPU);
 
