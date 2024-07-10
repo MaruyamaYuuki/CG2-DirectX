@@ -908,15 +908,14 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	ID3D12Resource* vertexResource = CreateBuffurResource(device, sizeof(VertexData) * kDivision);
 
 	// マテリアル用のリソースを作る
-	ID3D12Resource* materialResource = CreateBuffurResource(device, sizeof(Vector4));
+	ID3D12Resource* materialResource = CreateBuffurResource(device, sizeof(Material));
 	// マテリアル用にデータを書き込む
-	Vector4* materialData = nullptr;
+	Material* materialData = nullptr;
 	// 書き込むためのアドレスと取得
 	materialResource->Map(0, nullptr, reinterpret_cast<void**>(&materialData));
-
 	Vector4 color{ 1.0f,1.0f,1.0f,1.0f };
-	// 今回は赤を書き込む
-	*materialData = color;
+	materialData->color = color;
+	materialData->enableLighting = 1;
 
 	// WVP用のリソースを作る
 	ID3D12Resource* wvpResource = CreateBuffurResource(device, sizeof(TransformationMatrix));
@@ -934,7 +933,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	materialResourceSprite->Map(0, nullptr, reinterpret_cast<void**>(&materialDataSprite));
 	Vector4 spriteColor = { 1.0f,1.0f,1.0f,1.0f };
 	materialDataSprite->color = spriteColor;
-	materialDataSprite->enableLighting = 1;
+	materialDataSprite->enableLighting = 0;
 
 	// 平行光源用のリソースを作る
 	ID3D12Resource* directionalLightResource = CreateBuffurResource(device, sizeof(DirectionalLight));
@@ -965,12 +964,14 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	const float kLatEvery = pi / float(kSubdivision);
 	// 緯度の咆哮に分割
 	for (uint32_t latIndex = 0; latIndex < kSubdivision; ++latIndex) {
-		float lat = -pi / 2.0f + kLatEvery * latIndex;// θ
-		//経度の咆哮に分割しながら線を描く
+		float lat = -pi / 2.0f + kLatEvery * latIndex; // θ
+		float nextLat = lat + kLatEvery;
 		for (uint32_t lonIndex = 0; lonIndex < kSubdivision; ++lonIndex) {
 			uint32_t start = (latIndex * kSubdivision + lonIndex) * 6;
-			float lon = float(lonIndex * kLonEvery);
-			// 頂点にデータを入力する。基準点a
+			float lon = kLonEvery * lonIndex;
+			float nextLon = lon + kLonEvery;
+
+			// 頂点a
 			vertexData[start].position.x = cos(lat) * cos(lon);
 			vertexData[start].position.y = sin(lat);
 			vertexData[start].position.z = cos(lat) * sin(lon);
@@ -981,60 +982,60 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 			vertexData[start].normal.y = vertexData[start].position.y;
 			vertexData[start].normal.z = vertexData[start].position.z;
 
-			// b
-			vertexData[start + 1].position.x = cos(lat + kLatEvery) * cos(lon);
-			vertexData[start + 1].position.y = sin(lat + kLatEvery);
-			vertexData[start + 1].position.z = cos(lat + kLatEvery) * sin(lon);
+			// 頂点b
+			vertexData[start + 1].position.x = cos(nextLat) * cos(lon);
+			vertexData[start + 1].position.y = sin(nextLat);
+			vertexData[start + 1].position.z = cos(nextLat) * sin(lon);
 			vertexData[start + 1].position.w = 1.0f;
 			vertexData[start + 1].texcoord.x = float(lonIndex) / float(kSubdivision);
 			vertexData[start + 1].texcoord.y = 1.0f - float(latIndex + 1) / float(kSubdivision);
-			vertexData[start + 1].normal.x = vertexData[start].position.x;
-			vertexData[start + 1].normal.y = vertexData[start].position.y;
-			vertexData[start + 1].normal.z = vertexData[start].position.z;
+			vertexData[start + 1].normal.x = vertexData[start + 1].position.x;
+			vertexData[start + 1].normal.y = vertexData[start + 1].position.y;
+			vertexData[start + 1].normal.z = vertexData[start + 1].position.z;
 
-			// c
-			vertexData[start + 2].position.x = cos(lat) * cos(lon + kLonEvery);
+			// 頂点c
+			vertexData[start + 2].position.x = cos(lat) * cos(nextLon);
 			vertexData[start + 2].position.y = sin(lat);
-			vertexData[start + 2].position.z = cos(lat) * sin(lon + kLonEvery);
+			vertexData[start + 2].position.z = cos(lat) * sin(nextLon);
 			vertexData[start + 2].position.w = 1.0f;
-			vertexData[start + 2].texcoord.x = float((lonIndex + 1) % kSubdivision) / float(kSubdivision);
+			vertexData[start + 2].texcoord.x = (lonIndex + 1 == kSubdivision) ? 1.0f : float(lonIndex + 1) / float(kSubdivision);
 			vertexData[start + 2].texcoord.y = 1.0f - float(latIndex) / float(kSubdivision);
-			vertexData[start + 2].normal.x = vertexData[start].position.x;
-			vertexData[start + 2].normal.y = vertexData[start].position.y;
-			vertexData[start + 2].normal.z = vertexData[start].position.z;
+			vertexData[start + 2].normal.x = vertexData[start + 2].position.x;
+			vertexData[start + 2].normal.y = vertexData[start + 2].position.y;
+			vertexData[start + 2].normal.z = vertexData[start + 2].position.z;
 
-			// c
-			vertexData[start + 3].position.x = cos(lat) * cos(lon + kLonEvery);
+			// 頂点c（再度）
+			vertexData[start + 3].position.x = cos(lat) * cos(nextLon);
 			vertexData[start + 3].position.y = sin(lat);
-			vertexData[start + 3].position.z = cos(lat) * sin(lon + kLonEvery);
+			vertexData[start + 3].position.z = cos(lat) * sin(nextLon);
 			vertexData[start + 3].position.w = 1.0f;
-			vertexData[start + 3].texcoord.x = float((lonIndex + 1) % kSubdivision) / float(kSubdivision);
+			vertexData[start + 3].texcoord.x = (lonIndex + 1 == kSubdivision) ? 1.0f : float(lonIndex + 1) / float(kSubdivision);
 			vertexData[start + 3].texcoord.y = 1.0f - float(latIndex) / float(kSubdivision);
-			vertexData[start + 3].normal.x = vertexData[start].position.x;
-			vertexData[start + 3].normal.y = vertexData[start].position.y;
-			vertexData[start + 3].normal.z = vertexData[start].position.z;
+			vertexData[start + 3].normal.x = vertexData[start + 3].position.x;
+			vertexData[start + 3].normal.y = vertexData[start + 3].position.y;
+			vertexData[start + 3].normal.z = vertexData[start + 3].position.z;
 
-			// b
-			vertexData[start + 4].position.x = cos(lat + kLatEvery) * cos(lon);
-			vertexData[start + 4].position.y = sin(lat + kLatEvery);
-			vertexData[start + 4].position.z = cos(lat + kLatEvery) * sin(lon);
+			// 頂点b（再度）
+			vertexData[start + 4].position.x = cos(nextLat) * cos(lon);
+			vertexData[start + 4].position.y = sin(nextLat);
+			vertexData[start + 4].position.z = cos(nextLat) * sin(lon);
 			vertexData[start + 4].position.w = 1.0f;
 			vertexData[start + 4].texcoord.x = float(lonIndex) / float(kSubdivision);
 			vertexData[start + 4].texcoord.y = 1.0f - float(latIndex + 1) / float(kSubdivision);
-			vertexData[start + 4].normal.x = vertexData[start].position.x;
-			vertexData[start + 4].normal.y = vertexData[start].position.y;
-			vertexData[start + 4].normal.z = vertexData[start].position.z;
+			vertexData[start + 4].normal.x = vertexData[start + 4].position.x;
+			vertexData[start + 4].normal.y = vertexData[start + 4].position.y;
+			vertexData[start + 4].normal.z = vertexData[start + 4].position.z;
 
-			// d
-			vertexData[start + 5].position.x = cos(lat + kLatEvery) * cos(lon + kLonEvery);
-			vertexData[start + 5].position.y = sin(lat + kLatEvery);
-			vertexData[start + 5].position.z = cos(lat + kLatEvery) * sin(lon + kLonEvery);
+			// 頂点d
+			vertexData[start + 5].position.x = cos(nextLat) * cos(nextLon);
+			vertexData[start + 5].position.y = sin(nextLat);
+			vertexData[start + 5].position.z = cos(nextLat) * sin(nextLon);
 			vertexData[start + 5].position.w = 1.0f;
-			vertexData[start + 5].texcoord.x = float((lonIndex + 1) % kSubdivision) / float(kSubdivision);
+			vertexData[start + 5].texcoord.x = (lonIndex + 1 == kSubdivision) ? 1.0f : float(lonIndex + 1) / float(kSubdivision);
 			vertexData[start + 5].texcoord.y = 1.0f - float(latIndex + 1) / float(kSubdivision);
-			vertexData[start + 5].normal.x = vertexData[start].position.x;
-			vertexData[start + 5].normal.y = vertexData[start].position.y;
-			vertexData[start + 5].normal.z = vertexData[start].position.z;
+			vertexData[start + 5].normal.x = vertexData[start + 5].position.x;
+			vertexData[start + 5].normal.y = vertexData[start + 5].position.y;
+			vertexData[start + 5].normal.z = vertexData[start + 5].position.z;
 		}
 	}
 
@@ -1222,7 +1223,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 			ImGui::End();
 
 			color = { triangleColor.x, triangleColor.y, triangleColor.z, 1.0f };
-			*materialData = color;
+			materialData->color = color;
 
 			light.color = { lightColor.x,lightColor.y,lightColor.z,1.0f };
 			light.direction = lightDirection;
@@ -1273,7 +1274,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 			// 平行光源のCBufferの場所を設定
 			commandList->SetGraphicsRootConstantBufferView(3, directionalLightResource->GetGPUVirtualAddress());
 			// マテリアルCBufferの場所を設定
-			commandList->SetGraphicsRootConstantBufferView(0, materialResourceSprite->GetGPUVirtualAddress());
+			commandList->SetGraphicsRootConstantBufferView(0, materialResource->GetGPUVirtualAddress());
 			// wvp用のCBufferの場所を設定
 			commandList->SetGraphicsRootConstantBufferView(1, wvpResource->GetGPUVirtualAddress());
 			// SRVのDescriptorTableの先頭を設定
@@ -1282,6 +1283,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 			commandList->DrawInstanced(kDivision, 1, 0, 0);
 
 			commandList->SetGraphicsRootDescriptorTable(2, textureSrvHandleGPU);
+			commandList->SetGraphicsRootConstantBufferView(0, materialResourceSprite->GetGPUVirtualAddress());
 
 			// Spriteの描画
 			commandList->IASetVertexBuffers(0, 1, &vertexBufferViewSprite);
