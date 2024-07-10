@@ -916,7 +916,6 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 		for (uint32_t lonIndex = 0; lonIndex < kSubdivision; ++lonIndex) {
 			uint32_t start = (latIndex * kSubdivision + lonIndex) * 6;
 			float lon = float(lonIndex * kLonEvery);
-			// 頂点にデータを入力する。基準点a
 			float nextLon = lon + kLonEvery;
 
 			// 頂点a
