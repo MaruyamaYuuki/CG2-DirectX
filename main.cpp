@@ -40,6 +40,8 @@ struct VertexData {
 struct Material {
 	Vector4 color;
 	int32_t enableLighting;
+	float padding[3];
+	Matrix4x4 uvTransform;
 };
 struct TransformationMatrix {
 	Matrix4x4 WVP;
@@ -907,6 +909,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	Vector4 color{ 1.0f,1.0f,1.0f,1.0f };
 	materialData->color = color;
 	materialData->enableLighting = 1;
+	materialData->uvTransform = MakeIdentity4x4();
 
 	// WVP用のリソースを作る
 	ID3D12Resource* wvpResource = CreateBufferResource(device, sizeof(TransformationMatrix));
@@ -925,6 +928,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	Vector4 spriteColor = { 1.0f,1.0f,1.0f,1.0f };
 	materialDataSprite->color = spriteColor;
 	materialDataSprite->enableLighting = 0;
+	materialDataSprite->uvTransform = MakeIdentity4x4();
 
 	// 平行光源用のリソースを作る
 	ID3D12Resource* directionalLightResource = CreateBufferResource(device, sizeof(DirectionalLight));
@@ -1122,7 +1126,11 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	Transform transform{ {1.0f,1.0f,1.0f},{0.0f,0.0f,0.0f},{0.0f,0.0f,0.0f} };
 	Transform cameraTransform{ {1.0f,1.0f,1.0f},{0.0f,0.0f,0.0f},{0.0f,0.0f,-10.0f} };
 
-
+	Transform uvTransformSprite{
+		{1.0f,1.0f,1.0f},
+		{0.0f,0.0f,0.0f},
+		{0.0f,0.0f,0.0f},
+	};
 
 	// ImGuiの初期化
 	IMGUI_CHECKVERSION();
@@ -1180,39 +1188,39 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 			static ImVec4 triangleColor = ImVec4(color.x, color.y, color.z, color.w); // 初期値は白色
 			static ImVec4 lightColor = ImVec4(light.color.x, light.color.y, light.color.z, light.color.w);
 
-
-			if (ImGui::CollapsingHeader("Option", ImGuiTreeNodeFlags_DefaultOpen)) {
-
-				// 移動の変更
-				ImGui::DragFloat3("SphereTranslation", &transform.translate.x, 0.01f);
-				// 回転の変更
-				ImGui::DragFloat3("SphereRotation", &transform.rotate.x, 0.01f);
-				// スケールの変更
-				ImGui::DragFloat3("SphereScale", &transform.scale.x, 0.01f);
-				if (ImGui::Button("Reset SphereTransform")) {
-					// SRTをデフォルト値にリセットする
-					transform = { {1.0f,1.0f,1.0f},{0.0f,0.0f,0.0f},{0.0f,0.0f,0.0f} };
-				}
-
-				// カメラの移動の変更
-				ImGui::DragFloat3("CameraTranslation", &cameraTransform.translate.x, 0.01f);
-				if (ImGui::Button("Reset CameraTransform")) {
-					// SRTをデフォルト値にリセットする
-					cameraTransform = { {1.0f,1.0f,1.0f},{0.0f,0.0f,0.0f},{0.0f,0.0f,-10.0f} };
-				}
-
-				ImGui::Checkbox("useMonsterBall", &useMonsterBall);
-				ImGui::Checkbox("Enable Lighting", reinterpret_cast<bool*>(&materialData->enableLighting));
-				
-				if (ImGui::TreeNode("Material")) {
-			        ImGui::ColorEdit3("Color", (float*)&triangleColor); // 色を編集
-					ImGui::TreePop();
-				}
-				
-				ImGui::ColorEdit3("LightColor", (float*)&lightColor);
-				ImGui::SliderFloat3("LightDirectional",(float*) &lightDirection,-1.0f,1.0f);
-				ImGui::DragFloat("Intensity", &light.intensity, 0.01f);
+			// 移動の変更
+			ImGui::DragFloat3("SphereTranslation", &transform.translate.x, 0.01f);
+			// 回転の変更
+			ImGui::DragFloat3("SphereRotation", &transform.rotate.x, 0.01f);
+			// スケールの変更
+			ImGui::DragFloat3("SphereScale", &transform.scale.x, 0.01f);
+			if (ImGui::Button("Reset SphereTransform")) {
+				// SRTをデフォルト値にリセットする
+				transform = { {1.0f,1.0f,1.0f},{0.0f,0.0f,0.0f},{0.0f,0.0f,0.0f} };
 			}
+
+			// カメラの移動の変更
+			ImGui::DragFloat3("CameraTranslation", &cameraTransform.translate.x, 0.01f);
+			if (ImGui::Button("Reset CameraTransform")) {
+				// SRTをデフォルト値にリセットする
+				cameraTransform = { {1.0f,1.0f,1.0f},{0.0f,0.0f,0.0f},{0.0f,0.0f,-10.0f} };
+			}
+
+			ImGui::Checkbox("useMonsterBall", &useMonsterBall);
+			ImGui::Checkbox("Enable Lighting", reinterpret_cast<bool*>(&materialData->enableLighting));
+				
+			if (ImGui::TreeNode("Material")) {
+			       ImGui::ColorEdit3("Color", (float*)&triangleColor); // 色を編集
+				ImGui::TreePop();
+			}
+				
+			ImGui::ColorEdit3("LightColor", (float*)&lightColor);
+			ImGui::SliderFloat3("LightDirectional",(float*) &lightDirection,-1.0f,1.0f);
+			ImGui::DragFloat("Intensity", &light.intensity, 0.01f);
+
+			ImGui::DragFloat2("UVTranslate", &uvTransformSprite.translate.x, 0.01f, -10.0f, 10.0f);
+			ImGui::DragFloat2("UVScele", &uvTransformSprite.scale.x, 0.01f, -10.0f, 10.0f);
+			ImGui::SliderAngle("UVRorate", &uvTransformSprite.rotate.z);
 
 			ImGui::End();
 
@@ -1224,6 +1232,11 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 			directionalLightData->color = light.color;
 			directionalLightData->direction = light.direction;
 			directionalLightData->intensity = light.intensity;
+
+			Matrix4x4 uvTransformedMatrix = MakeScaleMatrix(uvTransformSprite.scale);
+			uvTransformedMatrix = Multiply(uvTransformedMatrix, MakeRotateZMatrix(uvTransformSprite.rotate.z));
+			uvTransformedMatrix = Multiply(uvTransformedMatrix, MakeTranslateMatrix(uvTransformSprite.translate));
+			materialDataSprite->uvTransform = uvTransformedMatrix;
 
 			// ImGuiの内部コマンドを発生する
 			ImGui::Render();
