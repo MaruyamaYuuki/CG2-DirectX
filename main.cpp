@@ -911,55 +911,59 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	const float kLatEvery = pi / float(kSubdivision);
 	// 緯度の咆哮に分割
 	for (uint32_t latIndex = 0; latIndex < kSubdivision; ++latIndex) {
-		float lat = -pi / 2.0f + kLatEvery * latIndex;// θ
-		//経度の咆哮に分割しながら線を描く
+		float lat = -pi / 2.0f + kLatEvery * latIndex; // θ
+		float nextLat = lat + kLatEvery;
 		for (uint32_t lonIndex = 0; lonIndex < kSubdivision; ++lonIndex) {
 			uint32_t start = (latIndex * kSubdivision + lonIndex) * 6;
-			float lon = float(lonIndex * kLonEvery);
+			float lon = kLonEvery * lonIndex;
 			float nextLon = lon + kLonEvery;
 
 			// 頂点a
-			vertexData[start].position.x = cosf(lat) * cosf(lon);
-			vertexData[start].position.y = sinf(lat);
-			vertexData[start].position.z = cosf(lat) * sinf(lon);
+			vertexData[start].position.x = cos(lat) * cos(lon);
+			vertexData[start].position.y = sin(lat);
+			vertexData[start].position.z = cos(lat) * sin(lon);
 			vertexData[start].position.w = 1.0f;
 			vertexData[start].texcoord.x = float(lonIndex) / float(kSubdivision);
 			vertexData[start].texcoord.y = 1.0f - float(latIndex) / float(kSubdivision);
 
 			// 頂点b
-			vertexData[start + 1].position.x = cosf(lat + kLatEvery) * cosf(lon);
-			vertexData[start + 1].position.y = sinf(lat + kLatEvery);
-			vertexData[start + 1].position.z = cosf(lat + kLatEvery) * sinf(lon);
+			vertexData[start + 1].position.x = cos(nextLat) * cos(lon);
+			vertexData[start + 1].position.y = sin(nextLat);
+			vertexData[start + 1].position.z = cos(nextLat) * sin(lon);
 			vertexData[start + 1].position.w = 1.0f;
 			vertexData[start + 1].texcoord.x = float(lonIndex) / float(kSubdivision);
 			vertexData[start + 1].texcoord.y = 1.0f - float(latIndex + 1) / float(kSubdivision);
 
 			// 頂点c
-			vertexData[start + 2].position.x = cosf(lat) * cosf(nextLon);
-			vertexData[start + 2].position.y = sinf(lat);
-			vertexData[start + 2].position.z = cosf(lat) * sinf(nextLon);
+			vertexData[start + 2].position.x = cos(lat) * cos(nextLon);
+			vertexData[start + 2].position.y = sin(lat);
+			vertexData[start + 2].position.z = cos(lat) * sin(nextLon);
 			vertexData[start + 2].position.w = 1.0f;
-			vertexData[start + 2].texcoord.x = float((lonIndex + 1) % kSubdivision) / float(kSubdivision);
-			if (lonIndex + 1 == kSubdivision) {
-				vertexData[start + 2].texcoord.x = 1.0f;
-			}
+			vertexData[start + 2].texcoord.x = (lonIndex + 1 == kSubdivision) ? 1.0f : float(lonIndex + 1) / float(kSubdivision);
 			vertexData[start + 2].texcoord.y = 1.0f - float(latIndex) / float(kSubdivision);
 
-			// 頂点cの再定義
-			vertexData[start + 3] = vertexData[start + 2];
+			// 頂点c（再度）
+			vertexData[start + 3].position.x = cos(lat) * cos(nextLon);
+			vertexData[start + 3].position.y = sin(lat);
+			vertexData[start + 3].position.z = cos(lat) * sin(nextLon);
+			vertexData[start + 3].position.w = 1.0f;
+			vertexData[start + 3].texcoord.x = (lonIndex + 1 == kSubdivision) ? 1.0f : float(lonIndex + 1) / float(kSubdivision);
+			vertexData[start + 3].texcoord.y = 1.0f - float(latIndex) / float(kSubdivision);
 
-			// 頂点bの再定義
-			vertexData[start + 4] = vertexData[start + 1];
+			// 頂点b（再度）
+			vertexData[start + 4].position.x = cos(nextLat) * cos(lon);
+			vertexData[start + 4].position.y = sin(nextLat);
+			vertexData[start + 4].position.z = cos(nextLat) * sin(lon);
+			vertexData[start + 4].position.w = 1.0f;
+			vertexData[start + 4].texcoord.x = float(lonIndex) / float(kSubdivision);
+			vertexData[start + 4].texcoord.y = 1.0f - float(latIndex + 1) / float(kSubdivision);
 
 			// 頂点d
-			vertexData[start + 5].position.x = cosf(lat + kLatEvery) * cosf(nextLon);
-			vertexData[start + 5].position.y = sinf(lat + kLatEvery);
-			vertexData[start + 5].position.z = cosf(lat + kLatEvery) * sinf(nextLon);
+			vertexData[start + 5].position.x = cos(nextLat) * cos(nextLon);
+			vertexData[start + 5].position.y = sin(nextLat);
+			vertexData[start + 5].position.z = cos(nextLat) * sin(nextLon);
 			vertexData[start + 5].position.w = 1.0f;
-			vertexData[start + 5].texcoord.x = float((lonIndex + 1) % kSubdivision) / float(kSubdivision);
-			if (lonIndex + 1 == kSubdivision) {
-				vertexData[start + 5].texcoord.x = 1.0f;
-			}
+			vertexData[start + 5].texcoord.x = (lonIndex + 1 == kSubdivision) ? 1.0f : float(lonIndex + 1) / float(kSubdivision);
 			vertexData[start + 5].texcoord.y = 1.0f - float(latIndex + 1) / float(kSubdivision);
 		}
 	}
