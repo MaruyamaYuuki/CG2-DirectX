@@ -899,15 +899,14 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	assert(SUCCEEDED(hr));
 
 	// マテリアル用のリソースを作る
-	ID3D12Resource* materialResource = CreateBufferResource(device, sizeof(Vector4));
+	ID3D12Resource* materialResource = CreateBufferResource(device, sizeof(Material));
 	// マテリアル用にデータを書き込む
-	Vector4* materialData = nullptr;
+	Material* materialData = nullptr;
 	// 書き込むためのアドレスと取得
 	materialResource->Map(0, nullptr, reinterpret_cast<void**>(&materialData));
-
 	Vector4 color{ 1.0f,1.0f,1.0f,1.0f };
-	// 今回は赤を書き込む
-	*materialData = color;
+	materialData->color = color;
+	materialData->enableLighting = 1;
 
 	// WVP用のリソースを作る
 	ID3D12Resource* wvpResource = CreateBufferResource(device, sizeof(TransformationMatrix));
@@ -925,14 +924,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	materialResourceSprite->Map(0, nullptr, reinterpret_cast<void**>(&materialDataSprite));
 	Vector4 spriteColor = { 1.0f,1.0f,1.0f,1.0f };
 	materialDataSprite->color = spriteColor;
-	materialDataSprite->enableLighting = 1;
-
-	ID3D12Resource* materialResourceSprite2 = CreateBufferResource(device, sizeof(Material));
-	Material* materialDataSprite2 = nullptr;
-	materialResourceSprite2->Map(0, nullptr, reinterpret_cast<void**>(&materialDataSprite2));
-	Vector4 spriteColor2 = { 1.0f,1.0f,1.0f,1.0f };
-	materialDataSprite2->color = spriteColor;
-	materialDataSprite2->enableLighting = 0;
+	materialDataSprite->enableLighting = 0;
 
 	// 平行光源用のリソースを作る
 	ID3D12Resource* directionalLightResource = CreateBufferResource(device, sizeof(DirectionalLight));
@@ -1210,7 +1202,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 				}
 
 				ImGui::Checkbox("useMonsterBall", &useMonsterBall);
-				ImGui::Checkbox("Enable Lighting", reinterpret_cast<bool*>(&materialDataSprite->enableLighting));
+				ImGui::Checkbox("Enable Lighting", reinterpret_cast<bool*>(&materialData->enableLighting));
 				
 				if (ImGui::TreeNode("Material")) {
 			        ImGui::ColorEdit3("Color", (float*)&triangleColor); // 色を編集
@@ -1225,7 +1217,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 			ImGui::End();
 
 			color = { triangleColor.x, triangleColor.y, triangleColor.z, 1.0f };
-			*materialData = color;
+			materialData->color = color;
 
 			light.color = { lightColor.x,lightColor.y,lightColor.z,1.0f };
 			light.direction = lightDirection;
@@ -1278,7 +1270,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 			// 平行光源のCBufferの場所を設定
 			commandList->SetGraphicsRootConstantBufferView(3, directionalLightResource->GetGPUVirtualAddress());
 			// マテリアルCBufferの場所を設定
-			commandList->SetGraphicsRootConstantBufferView(0, materialResourceSprite->GetGPUVirtualAddress());
+			commandList->SetGraphicsRootConstantBufferView(0, materialResource->GetGPUVirtualAddress());
 			// wvp用のCBufferの場所を設定
 			commandList->SetGraphicsRootConstantBufferView(1, wvpResource->GetGPUVirtualAddress());
 			// SRVのDescriptorTableの先頭を設定
@@ -1289,7 +1281,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 			commandList->SetGraphicsRootDescriptorTable(2, textureSrvHandleGPU);
 
 			// Spriteの描画
-			commandList->SetGraphicsRootConstantBufferView(0, materialResourceSprite2->GetGPUVirtualAddress());
+			commandList->SetGraphicsRootConstantBufferView(0, materialResourceSprite->GetGPUVirtualAddress());
 			commandList->IASetVertexBuffers(0, 1, &vertexBufferViewSprite);
     		commandList->IASetIndexBuffer(&indexBufferViewSprite);// IBVを設定
 			// TransformationMatrixCBufferの場所を設定
@@ -1380,8 +1372,8 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	vertexRsourceSprite->Release();
 	transformationMatrixResourceSprite->Release();
 	materialResourceSprite->Release();
-	materialResourceSprite2->Release();
 	directionalLightResource->Release();
+	indexResource->Release();
 	indexResourceSprite->Release();
 
 #ifdef _DEBUG
