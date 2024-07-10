@@ -908,15 +908,16 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	ID3D12Resource* vertexResource = CreateBuffurResource(device, sizeof(VertexData) * kDivision);
 
 	// マテリアル用のリソースを作る
-	ID3D12Resource* materialResource = CreateBuffurResource(device, sizeof(Vector4));
+	ID3D12Resource* materialResource = CreateBuffurResource(device, sizeof(Material));
 	// マテリアル用にデータを書き込む
-	Vector4* materialData = nullptr;
+	Material* materialData = nullptr;
 	// 書き込むためのアドレスと取得
 	materialResource->Map(0, nullptr, reinterpret_cast<void**>(&materialData));
 
 	Vector4 color{ 1.0f,1.0f,1.0f,1.0f };
 	// 今回は赤を書き込む
-	*materialData = color;
+	materialData->color = color;
+	materialData->enableLighting = 1;
 
 	// WVP用のリソースを作る
 	ID3D12Resource* wvpResource = CreateBuffurResource(device, sizeof(TransformationMatrix));
@@ -934,7 +935,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	materialResourceSprite->Map(0, nullptr, reinterpret_cast<void**>(&materialDataSprite));
 	Vector4 spriteColor = { 1.0f,1.0f,1.0f,1.0f };
 	materialDataSprite->color = spriteColor;
-	materialDataSprite->enableLighting = 1;
+	materialDataSprite->enableLighting = 0;
 
 	// 平行光源用のリソースを作る
 	ID3D12Resource* directionalLightResource = CreateBuffurResource(device, sizeof(DirectionalLight));
@@ -965,14 +966,12 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	const float kLatEvery = pi / float(kSubdivision);
 	// 緯度の咆哮に分割
 	for (uint32_t latIndex = 0; latIndex < kSubdivision; ++latIndex) {
-		float lat = -pi / 2.0f + kLatEvery * latIndex;// θ
+		float lat = -pi / 2.0f + kLatEvery * latIndex; // θ
 		float nextLat = lat + kLatEvery;
-		//経度の咆哮に分割しながら線を描く
 		for (uint32_t lonIndex = 0; lonIndex < kSubdivision; ++lonIndex) {
 			uint32_t start = (latIndex * kSubdivision + lonIndex) * 6;
-			float lon = float(lonIndex * kLonEvery);
+			float lon = kLonEvery * lonIndex;
 			float nextLon = lon + kLonEvery;
-
 
 			// 頂点a
 			vertexData[start].position.x = cos(lat) * cos(lon);
@@ -1226,7 +1225,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 			ImGui::End();
 
 			color = { triangleColor.x, triangleColor.y, triangleColor.z, 1.0f };
-			*materialData = color;
+			materialData->color = color;
 
 			light.color = { lightColor.x,lightColor.y,lightColor.z,1.0f };
 			light.direction = lightDirection;
@@ -1277,7 +1276,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 			// 平行光源のCBufferの場所を設定
 			commandList->SetGraphicsRootConstantBufferView(3, directionalLightResource->GetGPUVirtualAddress());
 			// マテリアルCBufferの場所を設定
-			commandList->SetGraphicsRootConstantBufferView(0, materialResourceSprite->GetGPUVirtualAddress());
+			commandList->SetGraphicsRootConstantBufferView(0, materialResource->GetGPUVirtualAddress());
 			// wvp用のCBufferの場所を設定
 			commandList->SetGraphicsRootConstantBufferView(1, wvpResource->GetGPUVirtualAddress());
 			// SRVのDescriptorTableの先頭を設定
@@ -1286,6 +1285,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 			commandList->DrawInstanced(kDivision, 1, 0, 0);
 
 			commandList->SetGraphicsRootDescriptorTable(2, textureSrvHandleGPU);
+			commandList->SetGraphicsRootConstantBufferView(0, materialResourceSprite->GetGPUVirtualAddress());
 
 			// Spriteの描画
 			commandList->IASetVertexBuffers(0, 1, &vertexBufferViewSprite);
