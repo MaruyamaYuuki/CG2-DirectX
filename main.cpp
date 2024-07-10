@@ -966,11 +966,15 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	// 緯度の咆哮に分割
 	for (uint32_t latIndex = 0; latIndex < kSubdivision; ++latIndex) {
 		float lat = -pi / 2.0f + kLatEvery * latIndex;// θ
+		float nextLat = lat + kLatEvery;
 		//経度の咆哮に分割しながら線を描く
 		for (uint32_t lonIndex = 0; lonIndex < kSubdivision; ++lonIndex) {
 			uint32_t start = (latIndex * kSubdivision + lonIndex) * 6;
 			float lon = float(lonIndex * kLonEvery);
-			// 頂点にデータを入力する。基準点a
+			float nextLon = lon + kLonEvery;
+
+
+			// 頂点a
 			vertexData[start].position.x = cos(lat) * cos(lon);
 			vertexData[start].position.y = sin(lat);
 			vertexData[start].position.z = cos(lat) * sin(lon);
@@ -981,60 +985,60 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 			vertexData[start].normal.y = vertexData[start].position.y;
 			vertexData[start].normal.z = vertexData[start].position.z;
 
-			// b
-			vertexData[start + 1].position.x = cos(lat + kLatEvery) * cos(lon);
-			vertexData[start + 1].position.y = sin(lat + kLatEvery);
-			vertexData[start + 1].position.z = cos(lat + kLatEvery) * sin(lon);
+			// 頂点b
+			vertexData[start + 1].position.x = cos(nextLat) * cos(lon);
+			vertexData[start + 1].position.y = sin(nextLat);
+			vertexData[start + 1].position.z = cos(nextLat) * sin(lon);
 			vertexData[start + 1].position.w = 1.0f;
 			vertexData[start + 1].texcoord.x = float(lonIndex) / float(kSubdivision);
 			vertexData[start + 1].texcoord.y = 1.0f - float(latIndex + 1) / float(kSubdivision);
-			vertexData[start + 1].normal.x = vertexData[start].position.x;
-			vertexData[start + 1].normal.y = vertexData[start].position.y;
-			vertexData[start + 1].normal.z = vertexData[start].position.z;
+			vertexData[start + 1].normal.x = vertexData[start + 1].position.x;
+			vertexData[start + 1].normal.y = vertexData[start + 1].position.y;
+			vertexData[start + 1].normal.z = vertexData[start + 1].position.z;
 
-			// c
-			vertexData[start + 2].position.x = cos(lat) * cos(lon + kLonEvery);
+			// 頂点c
+			vertexData[start + 2].position.x = cos(lat) * cos(nextLon);
 			vertexData[start + 2].position.y = sin(lat);
-			vertexData[start + 2].position.z = cos(lat) * sin(lon + kLonEvery);
+			vertexData[start + 2].position.z = cos(lat) * sin(nextLon);
 			vertexData[start + 2].position.w = 1.0f;
-			vertexData[start + 2].texcoord.x = float((lonIndex + 1) % kSubdivision) / float(kSubdivision);
+			vertexData[start + 2].texcoord.x = (lonIndex + 1 == kSubdivision) ? 1.0f : float(lonIndex + 1) / float(kSubdivision);
 			vertexData[start + 2].texcoord.y = 1.0f - float(latIndex) / float(kSubdivision);
-			vertexData[start + 2].normal.x = vertexData[start].position.x;
-			vertexData[start + 2].normal.y = vertexData[start].position.y;
-			vertexData[start + 2].normal.z = vertexData[start].position.z;
+			vertexData[start + 2].normal.x = vertexData[start + 2].position.x;
+			vertexData[start + 2].normal.y = vertexData[start + 2].position.y;
+			vertexData[start + 2].normal.z = vertexData[start + 2].position.z;
 
-			// c
-			vertexData[start + 3].position.x = cos(lat) * cos(lon + kLonEvery);
+			// 頂点c（再度）
+			vertexData[start + 3].position.x = cos(lat) * cos(nextLon);
 			vertexData[start + 3].position.y = sin(lat);
-			vertexData[start + 3].position.z = cos(lat) * sin(lon + kLonEvery);
+			vertexData[start + 3].position.z = cos(lat) * sin(nextLon);
 			vertexData[start + 3].position.w = 1.0f;
-			vertexData[start + 3].texcoord.x = float((lonIndex + 1) % kSubdivision) / float(kSubdivision);
+			vertexData[start + 3].texcoord.x = (lonIndex + 1 == kSubdivision) ? 1.0f : float(lonIndex + 1) / float(kSubdivision);
 			vertexData[start + 3].texcoord.y = 1.0f - float(latIndex) / float(kSubdivision);
-			vertexData[start + 3].normal.x = vertexData[start].position.x;
-			vertexData[start + 3].normal.y = vertexData[start].position.y;
-			vertexData[start + 3].normal.z = vertexData[start].position.z;
+			vertexData[start + 3].normal.x = vertexData[start + 3].position.x;
+			vertexData[start + 3].normal.y = vertexData[start + 3].position.y;
+			vertexData[start + 3].normal.z = vertexData[start + 3].position.z;
 
-			// b
-			vertexData[start + 4].position.x = cos(lat + kLatEvery) * cos(lon);
-			vertexData[start + 4].position.y = sin(lat + kLatEvery);
-			vertexData[start + 4].position.z = cos(lat + kLatEvery) * sin(lon);
+			// 頂点b（再度）
+			vertexData[start + 4].position.x = cos(nextLat) * cos(lon);
+			vertexData[start + 4].position.y = sin(nextLat);
+			vertexData[start + 4].position.z = cos(nextLat) * sin(lon);
 			vertexData[start + 4].position.w = 1.0f;
 			vertexData[start + 4].texcoord.x = float(lonIndex) / float(kSubdivision);
 			vertexData[start + 4].texcoord.y = 1.0f - float(latIndex + 1) / float(kSubdivision);
-			vertexData[start + 4].normal.x = vertexData[start].position.x;
-			vertexData[start + 4].normal.y = vertexData[start].position.y;
-			vertexData[start + 4].normal.z = vertexData[start].position.z;
+			vertexData[start + 4].normal.x = vertexData[start + 4].position.x;
+			vertexData[start + 4].normal.y = vertexData[start + 4].position.y;
+			vertexData[start + 4].normal.z = vertexData[start + 4].position.z;
 
-			// d
-			vertexData[start + 5].position.x = cos(lat + kLatEvery) * cos(lon + kLonEvery);
-			vertexData[start + 5].position.y = sin(lat + kLatEvery);
-			vertexData[start + 5].position.z = cos(lat + kLatEvery) * sin(lon + kLonEvery);
+			// 頂点d
+			vertexData[start + 5].position.x = cos(nextLat) * cos(nextLon);
+			vertexData[start + 5].position.y = sin(nextLat);
+			vertexData[start + 5].position.z = cos(nextLat) * sin(nextLon);
 			vertexData[start + 5].position.w = 1.0f;
-			vertexData[start + 5].texcoord.x = float((lonIndex + 1) % kSubdivision) / float(kSubdivision);
+			vertexData[start + 5].texcoord.x = (lonIndex + 1 == kSubdivision) ? 1.0f : float(lonIndex + 1) / float(kSubdivision);
 			vertexData[start + 5].texcoord.y = 1.0f - float(latIndex + 1) / float(kSubdivision);
-			vertexData[start + 5].normal.x = vertexData[start].position.x;
-			vertexData[start + 5].normal.y = vertexData[start].position.y;
-			vertexData[start + 5].normal.z = vertexData[start].position.z;
+			vertexData[start + 5].normal.x = vertexData[start + 5].position.x;
+			vertexData[start + 5].normal.y = vertexData[start + 5].position.y;
+			vertexData[start + 5].normal.z = vertexData[start + 5].position.z;
 		}
 	}
 
