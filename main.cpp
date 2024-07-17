@@ -54,8 +54,12 @@ struct DirectionalLight {
 	Vector3 direction;
 	float intensity;
 };
+struct MaterialData {
+	std::string textureFilePath;
+};
 struct ModelData {
 	std::vector<VertexData>vertices;
+	MaterialData material;
 };
 Matrix4x4 MakeIdentity4x4() {
 	Matrix4x4 result;
@@ -512,6 +516,31 @@ D3D12_GPU_DESCRIPTOR_HANDLE GetGPUDescriptorHandle(ID3D12DescriptorHeap* descrip
 	return handleGPU;
 }
 
+MaterialData LoadMaterialTemplateFile(const std::string& directoryPath, const std::string& filename) {
+	// 必要な変数の宣言とファイルを開く
+	MaterialData materialData;
+	std::string line;
+	std::ifstream file(directoryPath + "/" + filename);
+	assert(file.is_open());
+
+	// ファイルを読み、MaterialDataを構築
+	while (std::getline(file, line)) {
+		std::string identifier;
+		std::istringstream s(line);
+		s >> identifier;
+
+		// identifierに応じた処理
+		if (identifier == "map_kb") {
+			std::string textureFilename;
+			s >> textureFilename;
+			// 連結してファイルパスにする
+			materialData.textureFilePath = directoryPath + "/" + textureFilename;
+		}
+	}
+
+	return materialData;
+}
+
 ModelData LoadObjFile(const std::string& directoryPath, const std::string& filename)
 {
 	// 1.必要な変数の宣言
@@ -541,6 +570,7 @@ ModelData LoadObjFile(const std::string& directoryPath, const std::string& filen
 		else if (identifier == "vt") {
 			Vector2 texcoord;
 			s >> texcoord.x >> texcoord.y;
+			texcoord.y = 1.0f - texcoord.y;
 			texcoords.push_back(texcoord);
 		}
 		else if (identifier == "vn") {
@@ -576,9 +606,18 @@ ModelData LoadObjFile(const std::string& directoryPath, const std::string& filen
 			modelData.vertices.push_back(triangle[1]);
 			modelData.vertices.push_back(triangle[0]);
 		}
+		else if (identifier == "mtllib") {
+			// materialTemplateLibraryファイルの名前を取得する
+			std::string materialFilename;
+			s >> materialFilename;
+			// 基本的にobjファイルと同一階層にmtlは存在させるので、ディレクトリ名をファイル名を渡す
+			modelData.material = LoadMaterialTemplateFile(directoryPath, materialFilename);
+		}
 	}
 	return modelData;
 }
+
+
 
 // Windowsアプリでのエントリーポイント(main関数)
 int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
@@ -1365,8 +1404,9 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 			commandList->SetGraphicsRootDescriptorTable(2, useMonsterBall ? textureSrvHandleGPU2 : textureSrvHandleGPU);
 			// 描画
 			//commandList->DrawIndexedInstanced(kNumIndices, 1, 0, 0, 0);
-			commandList->SetGraphicsRootDescriptorTable(2, textureSrvHandleGPU);
 			commandList->DrawInstanced(UINT(modelData.vertices.size()), 1, 0, 0);
+
+			commandList->SetGraphicsRootDescriptorTable(2, textureSrvHandleGPU);
 
 			// Spriteの描画
 			commandList->SetGraphicsRootConstantBufferView(0, materialResourceSprite->GetGPUVirtualAddress());
