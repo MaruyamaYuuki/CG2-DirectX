@@ -530,7 +530,7 @@ MaterialData LoadMaterialTemplateFile(const std::string& directoryPath, const st
 		s >> identifier;
 
 		// identifierに応じた処理
-		if (identifier == "map_kb") {
+		if (identifier == "map_Kd") {
 			std::string textureFilename;
 			s >> textureFilename;
 			// 連結してファイルパスにする
@@ -1196,7 +1196,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	Transform transformSprite{ {1.0f,1.0f,1.0f},{0.0f,0.0f,0.0f},{0.0f,0.0f,0.0f} };
 
 	// 2枚目のTextureを読んで転送する
-	DirectX::ScratchImage mipImages2 = LoadTexture("resources/monsterBall.png");
+	DirectX::ScratchImage mipImages2 = LoadTexture(modelData.material.textureFilePath);
 	const DirectX::TexMetadata& metadata2 = mipImages2.GetMetadata();
 	ID3D12Resource* textureResource2 = CreateTextureResource(device, metadata2);
 	ID3D12Resource* intermediaResource2 = UploadTextureData(textureResource2, mipImages2, device, commandList);
