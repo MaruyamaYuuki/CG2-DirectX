@@ -511,7 +511,7 @@ D3D12_CPU_DESCRIPTOR_HANDLE GetCPUDescriptorHandle(Microsoft::WRL::ComPtr<ID3D12
 	return handleCPU;
 }
 
-D3D12_GPU_DESCRIPTOR_HANDLE GetGPUDescriptorHandle(ID3D12DescriptorHeap* descriptorHeap, uint32_t descriptorSize, uint32_t index)
+D3D12_GPU_DESCRIPTOR_HANDLE GetGPUDescriptorHandle(Microsoft::WRL::ComPtr<ID3D12DescriptorHeap> descriptorHeap, uint32_t descriptorSize, uint32_t index)
 {
 	D3D12_GPU_DESCRIPTOR_HANDLE handleGPU = descriptorHeap->GetGPUDescriptorHandleForHeapStart();
 	handleGPU.ptr += (descriptorSize * index);
@@ -619,11 +619,22 @@ ModelData LoadObjFile(const std::string& directoryPath, const std::string& filen
 	return modelData;
 }
 
-
+struct D3DResourceLeakChecker {
+	~D3DResourceLeakChecker() 
+	{
+		// リソースリークチェック
+		Microsoft::WRL::ComPtr<IDXGIDebug1> debug;
+		if (SUCCEEDED(DXGIGetDebugInterface1(0, IID_PPV_ARGS(&debug)))) {
+			debug->ReportLiveObjects(DXGI_DEBUG_ALL, DXGI_DEBUG_RLO_ALL);
+			debug->ReportLiveObjects(DXGI_DEBUG_APP, DXGI_DEBUG_RLO_ALL);
+			debug->ReportLiveObjects(DXGI_DEBUG_D3D12, DXGI_DEBUG_RLO_ALL);
+		}
+	}
+};
 
 // Windowsアプリでのエントリーポイント(main関数)
 int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
-
+	D3DResourceLeakChecker leakChek;
 	CoInitializeEx(0, COINIT_MULTITHREADED);
 
 #pragma region windowの生成
@@ -772,7 +783,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	// コマンドキューの生成がうまくいかなかったので起動できない
 	assert(SUCCEEDED(hr));
 #pragma endregion
-
+	
 #pragma region CommandAllocator
 	// コマンドアロケータの生成
 	Microsoft::WRL::ComPtr<ID3D12CommandAllocator> commandAllocator = nullptr;
@@ -987,14 +998,16 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 
 	// DepthStencilTextureをウィンドウのサイズで作成
 	//ID3D12Resource* depthStencilResource = CreateDepthStencilTextureResource(device, kClientWidth, kClientHeight);
-	ResourceObject depthStencilResource(CreateDepthStencilTextureResource(device, kClientWidth, kClientHeight).Get());
+	Microsoft::WRL::ComPtr<ID3D12Resource> depthStencilResource = CreateDepthStencilTextureResource(device, kClientWidth, kClientHeight);
+
+	ResourceObject depthStencilResourceObject(depthStencilResource.Get());
 
 	// DSVの設定
 	D3D12_DEPTH_STENCIL_VIEW_DESC dsvDesc{};
 	dsvDesc.Format = DXGI_FORMAT_D24_UNORM_S8_UINT;
 	dsvDesc.ViewDimension = D3D12_DSV_DIMENSION_TEXTURE2D;
 	// DSVHeapの先頭にDSVをつくる
-	device->CreateDepthStencilView(depthStencilResource.Get(), &dsvDesc, dsvDescriptorHeap->GetCPUDescriptorHandleForHeapStart());
+	device->CreateDepthStencilView(depthStencilResourceObject.Get(), &dsvDesc, dsvDescriptorHeap->GetCPUDescriptorHandleForHeapStart());
 
 	// DepthStencilStateの設定
 	D3D12_DEPTH_STENCIL_DESC depthStencilDesc{};
@@ -1386,8 +1399,8 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 			// 指定した震度で画面全体をクリアする
 			commandList->ClearDepthStencilView(dsvHadle, D3D12_CLEAR_FLAG_DEPTH, 1.0f, 0, 0, nullptr);
 			// 描画用のDescriptorHeapの設定
-			ID3D12DescriptorHeap* descriptorHeaps[] = { srvDescriptorHeap.Get()};
-			commandList->SetDescriptorHeaps(1, descriptorHeaps);
+			Microsoft::WRL::ComPtr<ID3D12DescriptorHeap> descriptorHeaps[] = { srvDescriptorHeap.Get()};
+			commandList->SetDescriptorHeaps(1, descriptorHeaps->GetAddressOf());
 			commandList->RSSetViewports(1, &viewport);
 			commandList->RSSetScissorRects(1, &scissorRect);
 			// RotSignatureを設定。PSOに設定しているけどベット設定が必要
@@ -1441,8 +1454,8 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 			assert(SUCCEEDED(hr));
 
 			// GPUにコマンドリストの実行を行わせる
-			ID3D12CommandList* commandLists[] = { commandList.Get()};
-			commandQueue->ExecuteCommandLists(1, commandLists);
+			Microsoft::WRL::ComPtr<ID3D12CommandList> commandLists[] = { commandList.Get()};
+			commandQueue->ExecuteCommandLists(1, commandLists->GetAddressOf());
 			// GPUとosに画面王交換を行うよう通知する
 			swapChain->Present(1, 0);
 
@@ -1471,58 +1484,19 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	ImGui_ImplWin32_Shutdown();
 	ImGui::DestroyContext();
 
-	CloseHandle(fenceEvent);
-	fence->Release();
-	rtvDescriptorHeap->Release();
-	swapChainResources[0]->Release();
-	swapChainResources[1]->Release();
-	swapChain->Release();
-	commandList->Release();
-	commandAllocator->Release();
-	commandQueue->Release();
-	device->Release();
-	useAdapter->Release();
-	dxgiFactory->Release();
-	vertexResource->Release();
-	graphicsPipelineState->Release();
 	signatureBlob->Release();
 	if (errorBlob) {
 		errorBlob->Release();
 	}
-	rootSignature->Release();
 	pixelShaderBlob->Release();
 	vertexShaderBlob->Release();
-	materialResource->Release();
-	wvpResource->Release();
-	srvDescriptorHeap->Release();
-	textureResource->Release();
-	intermediaResource->Release();
-	textureResource2->Release();
-	intermediaResource2->Release();
-	depthStencilResource->Release();
-	dsvDescriptorHeap->Release();
-	vertexRsourceSprite->Release();
-	transformationMatrixResourceSprite->Release();
-	materialResourceSprite->Release();
-	directionalLightResource->Release();
-	//indexResource->Release();
-	indexResourceSprite->Release();
+	CloseHandle(fenceEvent);
+
 
 #ifdef _DEBUG
-	debugController->Release();
+	//debugController->Release();
 #endif
 	CloseWindow(hwnd);
-
-
-
-	// リソースリークチェック
-	IDXGIDebug1* debug;
-	if (SUCCEEDED(DXGIGetDebugInterface1(0, IID_PPV_ARGS(&debug)))) {
-		debug->ReportLiveObjects(DXGI_DEBUG_ALL, DXGI_DEBUG_RLO_ALL);
-		debug->ReportLiveObjects(DXGI_DEBUG_APP, DXGI_DEBUG_RLO_ALL);
-		debug->ReportLiveObjects(DXGI_DEBUG_D3D12, DXGI_DEBUG_RLO_ALL);
-		debug->Release();
-	}
 
 	CoUninitialize();
 
