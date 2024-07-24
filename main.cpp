@@ -1327,14 +1327,25 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 			static ImVec4 triangleColor = ImVec4(color.x, color.y, color.z, color.w); // 初期値は白色
 			static ImVec4 lightColor = ImVec4(light.color.x, light.color.y, light.color.z, light.color.w);
 
-			ImGui::DragFloat3("CameraTranslation", &cameraTransform.translate.x, 0.01f);
-			ImGui::SliderAngle("CameraRotateX", &cameraTransform.rotate.x);
-			ImGui::SliderAngle("CameraRotateY", &cameraTransform.rotate.y);
-			ImGui::SliderAngle("CameraRotateZ", &cameraTransform.rotate.z);
+			if (ImGui::CollapsingHeader("Object")) {
+				ImGui::DragFloat3("Translate", &transform.translate.x, 0.01f);
+				ImGui::DragFloat3("Rotate", &transform.rotate.x, 0.01f);
+				ImGui::DragFloat3("Scale", &transform.scale.x, 0.01f);
+				if (ImGui::Button("Reset")) {
+					transform={ {1.0f,1.0f,1.0f},{0.0f,0.0f,0.0f},{0.0f,0.0f,0.0f} };
+				}
+			}
 
-			ImGui::SliderAngle("SphereRotateX", &transform.rotate.x);
-			ImGui::SliderAngle("SphereRotateY", &transform.rotate.y);
-			ImGui::SliderAngle("SphereRotateZ", &transform.rotate.z);
+			if (ImGui::CollapsingHeader("Sprite")) {
+				ImGui::DragFloat3("SpriteTranslate", &transformSprite.translate.x, 0.01f);
+				ImGui::DragFloat3("SpriteRotate", &transformSprite.rotate.x, 0.01f);
+				ImGui::DragFloat3("SpriteScale", &transformSprite.scale.x, 0.01f);
+    			if (ImGui::Button("Reset")) {
+    				cameraTransform={ {1.0f,1.0f,1.0f},{0.0f,0.0f,0.0f},{0.0f,0.0f,-10.0f} };
+    			}
+			}
+
+
 
 			ImGui::Checkbox("useMonsterBall", &useMonsterBall);
 			ImGui::Checkbox("Enable Lighting", reinterpret_cast<bool*>(&materialData->enableLighting));
@@ -1422,15 +1433,15 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 			commandList->SetGraphicsRootDescriptorTable(2, textureSrvHandleGPU);
 
 			// Spriteの描画
+			// TransformationMatrixCBufferの場所を設定
+			commandList->SetGraphicsRootConstantBufferView(1, transformationMatrixResourceSprite->GetGPUVirtualAddress());
 			commandList->SetGraphicsRootConstantBufferView(0, materialResourceSprite->GetGPUVirtualAddress());
 
 			commandList->IASetVertexBuffers(0, 1, &vertexBufferViewSprite);
     		commandList->IASetIndexBuffer(&indexBufferViewSprite);// IBVを設定
-			// TransformationMatrixCBufferの場所を設定
-			commandList->SetGraphicsRootConstantBufferView(1, transformationMatrixResourceSprite->GetGPUVirtualAddress());
 
 			// 描画！（DrawCall/ドローコール）6個のインデックスを使用し1つのインスタンスを描画
-			//commandList->DrawIndexedInstanced(6, 1, 0, 0, 0);
+			commandList->DrawIndexedInstanced(6, 1, 0, 0, 0);
 
 			// 実際のcommandListのImGuiの描画コマンドを積む
 			ImGui_ImplDX12_RenderDrawData(ImGui::GetDrawData(), commandList.Get());
