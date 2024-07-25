@@ -1357,46 +1357,51 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 			static ImVec4 objColor = ImVec4(modelColor.x, modelColor.y, modelColor.z, modelColor.w);
 			static ImVec4 lightColor = ImVec4(light.color.x, light.color.y, light.color.z, light.color.w);
 
-			if (ImGui::CollapsingHeader("Object")) {
+			if (ImGui::CollapsingHeader("Sphere")) {
 				ImGui::DragFloat3("SphereTranslate", &transform.translate.x, 0.01f);
 				ImGui::DragFloat3("SphereRotate", &transform.rotate.x, 0.01f);
 				ImGui::DragFloat3("SphereScale", &transform.scale.x, 0.01f);
 				if (ImGui::Button("Reset")) {
-					transform={ {1.0f,1.0f,1.0f},{0.0f,0.0f,0.0f},{0.0f,0.0f,0.0f} };
+					transform = { {1.0f,1.0f,1.0f},{0.0f,0.0f,0.0f},{-0.8f,0.0f,0.0f} };
 				}
     			ImGui::ColorEdit3("sphereColor", (float*)&objectColor);
+    			ImGui::Checkbox("Sphere Enable Lighting", reinterpret_cast<bool*>(&materialData->enableLighting));
 			}
 
-			if (ImGui::CollapsingHeader("Object")) {
+			if (ImGui::CollapsingHeader("Model")) {
 				ImGui::DragFloat3("objTranslate", &objTransform.translate.x, 0.01f);
 				ImGui::DragFloat3("objRotate", &objTransform.rotate.x, 0.01f);
 				ImGui::DragFloat3("objScale", &objTransform.scale.x, 0.01f);
 				if (ImGui::Button("Reset")) {
-					transform = { {1.0f,1.0f,1.0f},{0.0f,3.0f,0.0f},{0.0f,0.0f,0.0f} };
+					objTransform = { {1.0f,1.0f,1.0f},{0.0f,3.0f,0.0f},{1.4f,0.0f,0.0f} };
 				}
 				ImGui::ColorEdit3("objColor", (float*)&objColor);
+    			ImGui::Checkbox("Model Enable Lighting", reinterpret_cast<bool*>(&materialDataModel->enableLighting));
 			}
 
-			if (ImGui::CollapsingHeader("Object")) {
-				ImGui::DragFloat3("SpriteTranslate", &transformSprite.translate.x, 0.1f);
+			if (ImGui::CollapsingHeader("Sprite")) {
+				ImGui::DragFloat3("SpriteTranslate", &transformSprite.translate.x, 1.0f);
 				ImGui::DragFloat3("SpriteRotate", &transformSprite.rotate.x, 0.01f);
 				ImGui::DragFloat3("SpriteScale", &transformSprite.scale.x, 0.01f);
     			if (ImGui::Button("Reset")) {
-    				cameraTransform={ {1.0f,1.0f,1.0f},{0.0f,0.0f,0.0f},{0.0f,0.0f,-10.0f} };
+					transformSprite = { {1.0f,1.0f,1.0f},{0.0f,0.0f,0.0f},{0.0f,0.0f,0.0f} };
     			}
+    			ImGui::Checkbox("viewSprite", &viewSprite);
+			}
+			//ImGui::Checkbox("useMonsterBall", &useMonsterBall);
+
+			if (ImGui::CollapsingHeader("Lighting")) {
+	    		ImGui::ColorEdit3("LightColor", (float*)&lightColor);
+	    		ImGui::SliderFloat3("LightDirectional",(float*) &lightDirection,-1.0f,1.0f);
+	    		ImGui::DragFloat("Intensity", &light.intensity, 0.01f);
 			}
 
-			ImGui::Checkbox("viewSprite", &viewSprite);
-			//ImGui::Checkbox("useMonsterBall", &useMonsterBall);
-			ImGui::Checkbox("Enable Lighting", reinterpret_cast<bool*>(&materialData->enableLighting));
-				
-			ImGui::ColorEdit3("LightColor", (float*)&lightColor);
-			ImGui::SliderFloat3("LightDirectional",(float*) &lightDirection,-1.0f,1.0f);
-			ImGui::DragFloat("Intensity", &light.intensity, 0.01f);
+			if (ImGui::CollapsingHeader("UV")) {
+	    		ImGui::DragFloat2("UVTranslate", &uvTransformSprite.translate.x, 0.01f, -10.0f, 10.0f);
+    			ImGui::DragFloat2("UVScele", &uvTransformSprite.scale.x, 0.01f, -10.0f, 10.0f);
+    			ImGui::SliderAngle("UVRorate", &uvTransformSprite.rotate.z);
+			}
 
-			ImGui::DragFloat2("UVTranslate", &uvTransformSprite.translate.x, 0.01f, -10.0f, 10.0f);
-			ImGui::DragFloat2("UVScele", &uvTransformSprite.scale.x, 0.01f, -10.0f, 10.0f);
-			ImGui::SliderAngle("UVRorate", &uvTransformSprite.rotate.z);
 			ImGui::End();
 
 			color = { objectColor.x, objectColor.y, objectColor.z, 1.0f };
@@ -1471,8 +1476,9 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 			// 描画
 			commandList->DrawIndexedInstanced(kNumIndices, 1, 0, 0, 0);
 
-			commandList->SetGraphicsRootConstantBufferView(0, materialResourceModel->GetGPUVirtualAddress());
 			commandList->IASetVertexBuffers(0, 1, &vertexBufferViewModel);
+			commandList->SetGraphicsRootConstantBufferView(0, materialResourceModel->GetGPUVirtualAddress());
+			commandList->SetGraphicsRootConstantBufferView(3, directionalLightResource->GetGPUVirtualAddress());
 			commandList->SetGraphicsRootConstantBufferView(1, objResource->GetGPUVirtualAddress());
 			commandList->DrawInstanced(UINT(modelData.vertices.size()), 1, 0, 0);
 
@@ -1481,7 +1487,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 			// Spriteの描画
 			// TransformationMatrixCBufferの場所を設定
 			commandList->SetGraphicsRootConstantBufferView(1, transformationMatrixResourceSprite->GetGPUVirtualAddress());
-			commandList->SetGraphicsRootConstantBufferView(0, materialResourceSprite->GetGPUVirtualAddress());
+		    commandList->SetGraphicsRootConstantBufferView(0, materialResourceSprite->GetGPUVirtualAddress());
 
 			commandList->IASetVertexBuffers(0, 1, &vertexBufferViewSprite);
     		commandList->IASetIndexBuffer(&indexBufferViewSprite);// IBVを設定
