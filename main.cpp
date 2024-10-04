@@ -961,6 +961,13 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	// すべての色要素を書き込む
 	blendDesc.RenderTarget[0].RenderTargetWriteMask =
 		D3D12_COLOR_WRITE_ENABLE_ALL;
+	blendDesc.RenderTarget[0].BlendEnable = false;
+	blendDesc.RenderTarget[0].SrcBlend = D3D12_BLEND_SRC_ALPHA;
+	blendDesc.RenderTarget[0].BlendOp = D3D12_BLEND_OP_ADD;
+	blendDesc.RenderTarget[0].DestBlend = D3D12_BLEND_INV_SRC_ALPHA;
+	blendDesc.RenderTarget[0].SrcBlendAlpha = D3D12_BLEND_ONE;
+	blendDesc.RenderTarget[0].BlendOpAlpha = D3D12_BLEND_OP_ADD;
+	blendDesc.RenderTarget[0].DestBlendAlpha = D3D12_BLEND_ZERO;
 
 	// RasiterzerStateの設定
 	D3D12_RASTERIZER_DESC rasterizerDesc{};
@@ -1086,8 +1093,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	directionalLightData->color = light.color;
 	directionalLightData->direction = light.direction;
 	directionalLightData->intensity = light.intensity;
-
-   // 頂点リソースを作る
+/*  // 頂点リソースを作る
 	float pi = float(M_PI);
 	// 球の分割数
 	const uint32_t kSubdivision = 160;
@@ -1158,10 +1164,11 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 			indexData[index++] = bottomLeft;
 			indexData[index++] = bottomLeft + 1;
 		}
-	}
+	}*/
+ 
 
 	// モデル読み込み
-	ModelData modelData = LoadObjFile("resources", "plane.obj");
+	ModelData modelData = LoadObjFile("resources", "fence.obj");
 	// 頂点リソースを作る
 	Microsoft::WRL::ComPtr<ID3D12Resource> vertexResourceModel = CreateBufferResource(device, sizeof(VertexData) * modelData.vertices.size());
 	// 頂点バッファビューを作成する
@@ -1286,7 +1293,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	scissorRect.bottom = kClientHeight;
 	
 	Transform transform{ {1.0f,1.0f,1.0f},{0.0f,0.0f,0.0f},{-0.8f,0.0f,0.0f} };
-	Transform objTransform{ {1.0f,1.0f,1.0f},{0.0f,3.0f,0.0f},{1.4f,0.0f,0.0f} };
+	Transform objTransform{ {1.0f,1.0f,1.0f},{0.4f,3.0f,0.0f},{0.0f,0.0f,0.0f} };
 	Transform cameraTransform{ {1.0f,1.0f,1.0f},{0.0f,0.0f,0.0f},{0.0f,0.0f,-10.0f} };
 
 	Transform uvTransformSprite{
@@ -1357,7 +1364,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 			static ImVec4 objColor = ImVec4(modelColor.x, modelColor.y, modelColor.z, modelColor.w);
 			static ImVec4 lightColor = ImVec4(light.color.x, light.color.y, light.color.z, light.color.w);
 
-			if (ImGui::CollapsingHeader("Sphere")) {
+			/*if (ImGui::CollapsingHeader("Sphere")) {
 				ImGui::DragFloat3("SphereTranslate", &transform.translate.x, 0.01f);
 				ImGui::DragFloat3("SphereRotate", &transform.rotate.x, 0.01f);
 				ImGui::DragFloat3("SphereScale", &transform.scale.x, 0.01f);
@@ -1366,20 +1373,20 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 				}
     			ImGui::ColorEdit3("sphereColor", (float*)&objectColor);
     			ImGui::Checkbox("Sphere Enable Lighting", reinterpret_cast<bool*>(&materialData->enableLighting));
-			}
+			}*/
 
 			if (ImGui::CollapsingHeader("Model")) {
 				ImGui::DragFloat3("objTranslate", &objTransform.translate.x, 0.01f);
 				ImGui::DragFloat3("objRotate", &objTransform.rotate.x, 0.01f);
 				ImGui::DragFloat3("objScale", &objTransform.scale.x, 0.01f);
 				if (ImGui::Button("Reset")) {
-					objTransform = { {1.0f,1.0f,1.0f},{0.0f,3.0f,0.0f},{1.4f,0.0f,0.0f} };
+					objTransform = { {1.0f,1.0f,1.0f},{0.4f,3.0f,0.0f},{0.0f,0.0f,0.0f} };
 				}
 				ImGui::ColorEdit3("objColor", (float*)&objColor);
     			ImGui::Checkbox("Model Enable Lighting", reinterpret_cast<bool*>(&materialDataModel->enableLighting));
 			}
 
-			if (ImGui::CollapsingHeader("Sprite")) {
+			/*if (ImGui::CollapsingHeader("Sprite")) {
 				ImGui::DragFloat3("SpriteTranslate", &transformSprite.translate.x, 1.0f);
 				ImGui::DragFloat3("SpriteRotate", &transformSprite.rotate.x, 0.01f);
 				ImGui::DragFloat3("SpriteScale", &transformSprite.scale.x, 0.01f);
@@ -1388,7 +1395,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
     			}
     			ImGui::Checkbox("viewSprite", &viewSprite);
 			}
-			//ImGui::Checkbox("useMonsterBall", &useMonsterBall);
+			//ImGui::Checkbox("useMonsterBall", &useMonsterBall);*/
 
 			if (ImGui::CollapsingHeader("Lighting")) {
 	    		ImGui::ColorEdit3("LightColor", (float*)&lightColor);
@@ -1396,11 +1403,11 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	    		ImGui::DragFloat("Intensity", &light.intensity, 0.01f);
 			}
 
-			if (ImGui::CollapsingHeader("UV")) {
+			/*if (ImGui::CollapsingHeader("UV")) {
 	    		ImGui::DragFloat2("UVTranslate", &uvTransformSprite.translate.x, 0.01f, -10.0f, 10.0f);
     			ImGui::DragFloat2("UVScele", &uvTransformSprite.scale.x, 0.01f, -10.0f, 10.0f);
     			ImGui::SliderAngle("UVRorate", &uvTransformSprite.rotate.z);
-			}
+			}*/
 
 			ImGui::End();
 
@@ -1458,9 +1465,9 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 			// RotSignatureを設定。PSOに設定しているけどベット設定が必要
 			commandList->SetGraphicsRootSignature(rootSignature.Get());
 			commandList->SetPipelineState(graphicsPipelineState.Get());
-			commandList->IASetVertexBuffers(0, 1, &vertexBufferView);
+			//commandList->IASetVertexBuffers(0, 1, &vertexBufferView);
 
-			commandList->IASetIndexBuffer(&indexBufferView);
+			//commandList->IASetIndexBuffer(&indexBufferView);
 
 
 			// 形状を設定
@@ -1474,7 +1481,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 			// SRVのDescriptorTableの先頭を設定
 			commandList->SetGraphicsRootDescriptorTable(2, useMonsterBall ? textureSrvHandleGPU2 : textureSrvHandleGPU);
 			// 描画
-			commandList->DrawIndexedInstanced(kNumIndices, 1, 0, 0, 0);
+			//commandList->DrawIndexedInstanced(kNumIndices, 1, 0, 0, 0);
 
 			commandList->IASetVertexBuffers(0, 1, &vertexBufferViewModel);
 			commandList->SetGraphicsRootConstantBufferView(0, materialResourceModel->GetGPUVirtualAddress());
@@ -1489,7 +1496,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 			commandList->SetGraphicsRootConstantBufferView(1, transformationMatrixResourceSprite->GetGPUVirtualAddress());
 		    commandList->SetGraphicsRootConstantBufferView(0, materialResourceSprite->GetGPUVirtualAddress());
 
-			commandList->IASetVertexBuffers(0, 1, &vertexBufferViewSprite);
+			//commandList->IASetVertexBuffers(0, 1, &vertexBufferViewSprite);
     		commandList->IASetIndexBuffer(&indexBufferViewSprite);// IBVを設定
 
 			// 描画！（DrawCall/ドローコール）6個のインデックスを使用し1つのインスタンスを描画
