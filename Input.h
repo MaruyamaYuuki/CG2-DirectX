@@ -13,8 +13,10 @@ public:
 public:
 	// 初期化
 	void Initialize(HINSTANCE hInstance, HWND hdnw);
+
 	// 更新
 	void Update();
+
     /// <summary>
     /// キーの押下をチェック
     /// </summary>
@@ -22,9 +24,20 @@ public:
 	/// <retuns>押されているか</returns>
 	bool PushKey(BYTE keyNumber);
 
+    /// <summary>
+    /// キーのトリガーチェック
+    /// </summary>
+	/// <pragma name="keyNumber">キー番号( DIK_ 等)</pragma>
+	/// <return>トリガーか<_resurn>
+	bool TriggerKey(BYTE keyNumber);
+
 private:
+	// DirectInputのインスタンス
+	ComPtr<IDirectInput8> directInput;
 	// キーボードのデバイス
-	ComPtr<IDirectInputDevice8>  keyboard;
+	ComPtr<IDirectInputDevice8W>  keyboard;
 	// 全キーの状態
 	BYTE key[256] = {};
+	// 全開の全キーの状態
+	BYTE keyPre[256] = {};
 };

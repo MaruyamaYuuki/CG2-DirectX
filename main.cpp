@@ -1307,7 +1307,8 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 		}
 		else {
 			
-			if (input->PushKey(DIK_0)){
+			input->Update();
+			if (input->TriggerKey(DIK_0)){
 				OutputDebugStringA("Hit 0\n");
 			}
 			
