@@ -17,7 +17,7 @@ void Input::Initialize(HINSTANCE hInstance, HWND hwnd) {
 		(void**)&directInput, nullptr);
 	assert(SUCCEEDED(result));
 	// DirectInputの初期化
-	ComPtr<IDirectInputDevice8>  keyboard = nullptr;
+	ComPtr<IDirectInputDevice8>  keyboard;
 	result = directInput->CreateDevice(GUID_SysKeyboard, &keyboard, NULL);
 	assert(SUCCEEDED(result));
 	// 入力データ形式のセット
