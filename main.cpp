@@ -1306,12 +1306,11 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 			DispatchMessage(&msg);
 		}
 		else {
-			/*
-			if (key[DIK_0]) {
-				OutputDebugStringA("Hit 0\n");
-			}*/
 			
-
+			if (input->PushKey(DIK_0)){
+				OutputDebugStringA("Hit 0\n");
+			}
+			
 		    ImGui_ImplDX12_NewFrame();
 		    ImGui_ImplWin32_NewFrame();
 		    ImGui::NewFrame();

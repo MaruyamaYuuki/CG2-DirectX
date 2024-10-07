@@ -15,8 +15,16 @@ public:
 	void Initialize(HINSTANCE hInstance, HWND hdnw);
 	// 更新
 	void Update();
+    /// <summary>
+    /// キーの押下をチェック
+    /// </summary>
+	/// <pragma name="keyNumber">キー番号( DIK_ 等)</pragma>
+	/// <retuns>押されているか</returns>
+	bool PushKey(BYTE keyNumber);
 
 private:
 	// キーボードのデバイス
 	ComPtr<IDirectInputDevice8>  keyboard;
+	// 全キーの状態
+	BYTE key[256] = {};
 };
