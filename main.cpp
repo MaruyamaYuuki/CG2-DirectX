@@ -1306,6 +1306,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 			DispatchMessage(&msg);
 		}
 		else {
+			input->Update();
 			/*
 			if (key[DIK_0]) {
 				OutputDebugStringA("Hit 0\n");
