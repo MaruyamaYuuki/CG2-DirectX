@@ -1134,7 +1134,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	Transform transforms[kNumInstance];
 	for (uint32_t index = 0; index < kNumInstance; ++index) {
 		transforms[index].scale = { 1.0f,1.0f,1.0f };
-		transforms[index].rotate = { 0.0f,0.0f,0.0f };
+		transforms[index].rotate = { 0.0f,DirectX::XM_PI,0.0f };
 		transforms[index].translate = { index * 0.1f,index * 0.1f,index * 0.1f };
 	}
 
@@ -1429,9 +1429,9 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 			static ImVec4 lightColor = ImVec4(light.color.x, light.color.y, light.color.z, light.color.w);
 
 			if (ImGui::CollapsingHeader("Model")) {
-				ImGui::DragFloat3("objTranslate", &objTransform.translate.x, 0.01f);
-				ImGui::DragFloat3("objRotate", &objTransform.rotate.x, 0.01f);
-				ImGui::DragFloat3("objScale", &objTransform.scale.x, 0.01f);
+				ImGui::DragFloat3("objTranslate", &transforms[0].translate.x, 0.01f);
+				ImGui::DragFloat3("objRotate", &transforms[0].rotate.x, 0.01f);
+				ImGui::DragFloat3("objScale", &transforms[0].scale.x, 0.01f);
 				if (ImGui::Button("Reset")) {
 					objTransform = { {1.0f,1.0f,1.0f},{0.4f,3.0f,0.0f},{0.0f,0.0f,0.0f} };
 				}
