@@ -36,6 +36,10 @@ struct Transform {
 	Vector3 rotate;
 	Vector3 translate;
 };
+struct Particle {
+	Transform transform;
+	Vector3 velocity;
+};
 struct VertexData {
 	Vector4 position;
 	Vector2 texcoord;
@@ -1131,12 +1135,15 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	D3D12_GPU_DESCRIPTOR_HANDLE instancingSrvHandleGPU = GetGPUDescriptorHandle(srvDescriptorHeap, descriptorSizeSRV, 3);
 	device->CreateShaderResourceView(instancingResource.Get(), &instancingSrvDesc, instancingSrvHandleCPU);
 
-	Transform transforms[kNumInstance];
+	Particle particles[kNumInstance];
 	for (uint32_t index = 0; index < kNumInstance; ++index) {
-		transforms[index].scale = { 1.0f,1.0f,1.0f };
-		transforms[index].rotate = { 0.0f,DirectX::XM_PI,0.0f };
-		transforms[index].translate = { index * 0.1f,index * 0.1f,index * 0.1f };
+		particles[index].transform.scale = { 1.0f,1.0f,1.0f };
+		particles[index].transform.rotate = { 0.0f,DirectX::XM_PI,0.0f };
+		particles[index].transform.translate = { index * 0.1f,index * 0.1f,index * 0.1f };
+		// 速度を上向きに設定
+		particles[index].velocity = { 0.0f,1.0f,1.0f };
 	}
+	const float kDeltaTime = 1.0f / 60.0f;
 
 /*  // 頂点リソースを作る
 	float pi = float(M_PI);
@@ -1411,11 +1418,15 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 
 			for (uint32_t index = 0; index < kNumInstance; ++index) {
 				Matrix4x4 worldMatrix =
-					MakeAffineMatrix(transforms[index].scale, transforms[index].rotate, transforms[index].translate);
+					MakeAffineMatrix(particles[index].transform.scale, particles[index].transform.rotate, particles[index].transform.translate);
 				Matrix4x4 worldViewProjectionMatrix2
 					= Multiply(worldMatrix, Multiply(viewMatrix, projectionMatrix));
 				instancingData[index].WVP = worldViewProjectionMatrix2;
 				instancingData[index].World = worldMatrix;
+
+				particles[index].transform.translate.x += particles[index].velocity.x * kDeltaTime;
+				particles[index].transform.translate.y += particles[index].velocity.y * kDeltaTime;
+				particles[index].transform.translate.z += particles[index].velocity.z * kDeltaTime;
 			}
 
 			// 開発用UIの処理
@@ -1429,9 +1440,9 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 			static ImVec4 lightColor = ImVec4(light.color.x, light.color.y, light.color.z, light.color.w);
 
 			if (ImGui::CollapsingHeader("Model")) {
-				ImGui::DragFloat3("objTranslate", &transforms[0].translate.x, 0.01f);
-				ImGui::DragFloat3("objRotate", &transforms[0].rotate.x, 0.01f);
-				ImGui::DragFloat3("objScale", &transforms[0].scale.x, 0.01f);
+				ImGui::DragFloat3("objTranslate", &objTransform.translate.x, 0.01f);
+				ImGui::DragFloat3("objRotate", &objTransform.rotate.x, 0.01f);
+				ImGui::DragFloat3("objScale", &objTransform.scale.x, 0.01f);
 				if (ImGui::Button("Reset")) {
 					objTransform = { {1.0f,1.0f,1.0f},{0.4f,3.0f,0.0f},{0.0f,0.0f,0.0f} };
 				}
