@@ -884,10 +884,18 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 		D3D12_ROOT_SIGNATURE_FLAG_ALLOW_INPUT_ASSEMBLER_INPUT_LAYOUT;
 
 	// RootParameter作成
-	D3D12_ROOT_PARAMETER rootParameter[4] = {};
+	D3D12_ROOT_PARAMETER rootParameter[5] = {};
 	rootParameter[0].ParameterType = D3D12_ROOT_PARAMETER_TYPE_CBV;
 	rootParameter[0].ShaderVisibility = D3D12_SHADER_VISIBILITY_PIXEL;
 	rootParameter[0].Descriptor.ShaderRegister = 0;
+
+	rootParameter[1].ParameterType = D3D12_ROOT_PARAMETER_TYPE_CBV;
+	rootParameter[1].ShaderVisibility = D3D12_SHADER_VISIBILITY_VERTEX;
+	rootParameter[1].Descriptor.ShaderRegister = 0;
+
+	rootParameter[3].ParameterType = D3D12_ROOT_PARAMETER_TYPE_CBV;
+	rootParameter[3].ShaderVisibility = D3D12_SHADER_VISIBILITY_PIXEL;
+	rootParameter[3].Descriptor.ShaderRegister = 1;
 
 	D3D12_DESCRIPTOR_RANGE descriptorRangeForInstancing[1] = {};
 	descriptorRangeForInstancing[0].BaseShaderRegister = 0;
@@ -895,15 +903,10 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	descriptorRangeForInstancing[0].RangeType = D3D12_DESCRIPTOR_RANGE_TYPE_SRV;
 	descriptorRangeForInstancing[0].OffsetInDescriptorsFromTableStart = D3D12_DESCRIPTOR_RANGE_OFFSET_APPEND;
 
-	rootParameter[1].ParameterType = D3D12_ROOT_PARAMETER_TYPE_DESCRIPTOR_TABLE;
-	rootParameter[1].ShaderVisibility = D3D12_SHADER_VISIBILITY_VERTEX;
-	rootParameter[1].DescriptorTable.pDescriptorRanges = descriptorRangeForInstancing;
-	rootParameter[1].DescriptorTable.NumDescriptorRanges = _countof(descriptorRangeForInstancing);
-	rootParameter[1].Descriptor.ShaderRegister = 0;
-
-	rootParameter[3].ParameterType = D3D12_ROOT_PARAMETER_TYPE_CBV;
-	rootParameter[3].ShaderVisibility = D3D12_SHADER_VISIBILITY_PIXEL;
-	rootParameter[3].Descriptor.ShaderRegister = 1;
+	rootParameter[4].ParameterType = D3D12_ROOT_PARAMETER_TYPE_DESCRIPTOR_TABLE;
+	rootParameter[4].ShaderVisibility = D3D12_SHADER_VISIBILITY_VERTEX;
+	rootParameter[4].DescriptorTable.pDescriptorRanges = descriptorRangeForInstancing;
+	rootParameter[4].DescriptorTable.NumDescriptorRanges = _countof(descriptorRangeForInstancing);
 
 	descriptitonRootSignature.pParameters = rootParameter;
 	descriptitonRootSignature.NumParameters = _countof(rootParameter);
@@ -1102,6 +1105,39 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	directionalLightData->color = light.color;
 	directionalLightData->direction = light.direction;
 	directionalLightData->intensity = light.intensity;
+
+	const uint32_t kNumInstance = 10;
+	// Instance用のTransformationMatrixリソースを作る
+	Microsoft::WRL::ComPtr<ID3D12Resource> instancingResource =
+		CreateBufferResource(device, sizeof(TransformationMatrix) * kNumInstance);
+	// 書き込むためのアドレスを取得
+	TransformationMatrix* instancingData = nullptr;
+	instancingResource->Map(0, nullptr, reinterpret_cast<void**>(&instancingData));
+	// 単位行列を書き込んでおく
+	for (uint32_t index = 0; index < kNumInstance; ++index) {
+		instancingData[index].WVP = MakeIdentity4x4();
+		instancingData[index].World = MakeIdentity4x4();
+	}
+
+	D3D12_SHADER_RESOURCE_VIEW_DESC instancingSrvDesc{};
+	instancingSrvDesc.Format = DXGI_FORMAT_UNKNOWN;
+	instancingSrvDesc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
+	instancingSrvDesc.ViewDimension = D3D12_SRV_DIMENSION_BUFFER;
+	instancingSrvDesc.Buffer.FirstElement = 0;
+	instancingSrvDesc.Buffer.Flags = D3D12_BUFFER_SRV_FLAG_NONE;
+	instancingSrvDesc.Buffer.NumElements = kNumInstance;
+	instancingSrvDesc.Buffer.StructureByteStride = sizeof(TransformationMatrix);
+	D3D12_CPU_DESCRIPTOR_HANDLE instancingSrvHandleCPU = GetCPUDescriptorHandle(srvDescriptorHeap, descriptorSizeSRV, 3);
+	D3D12_GPU_DESCRIPTOR_HANDLE instancingSrvHandleGPU = GetGPUDescriptorHandle(srvDescriptorHeap, descriptorSizeSRV, 3);
+	device->CreateShaderResourceView(instancingResource.Get(), &instancingSrvDesc, instancingSrvHandleCPU);
+
+	Transform transforms[kNumInstance];
+	for (uint32_t index = 0; index < kNumInstance; ++index) {
+		transforms[index].scale = { 1.0f,1.0f,1.0f };
+		transforms[index].rotate = { 0.0f,0.0f,0.0f };
+		transforms[index].translate = { index * 0.1f,index * 0.1f,index * 0.1f };
+	}
+
 /*  // 頂点リソースを作る
 	float pi = float(M_PI);
 	// 球の分割数
@@ -1373,6 +1409,15 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 			Matrix4x4 worldViewProjectionMatrixSprite = Multiply(transformationMatrixDataSprite->World, Multiply(viewMatrixSprite, projectionMatrixSprite));
 			transformationMatrixDataSprite->WVP = worldViewProjectionMatrixSprite;
 
+			for (uint32_t index = 0; index < kNumInstance; ++index) {
+				Matrix4x4 worldMatrix =
+					MakeAffineMatrix(transforms[index].scale, transforms[index].rotate, transforms[index].translate);
+				Matrix4x4 worldViewProjectionMatrix2
+					= Multiply(worldMatrix, Multiply(viewMatrix, projectionMatrix));
+				instancingData[index].WVP = worldViewProjectionMatrix2;
+				instancingData[index].World = worldMatrix;
+			}
+
 			// 開発用UIの処理
 			//ImGui::ShowDemoWindow();
 
@@ -1382,17 +1427,6 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 			static ImVec4 objectColor = ImVec4(color.x, color.y, color.z, color.w); // 初期値は白色
 			static ImVec4 objColor = ImVec4(modelColor.x, modelColor.y, modelColor.z, modelColor.w);
 			static ImVec4 lightColor = ImVec4(light.color.x, light.color.y, light.color.z, light.color.w);
-
-			/*if (ImGui::CollapsingHeader("Sphere")) {
-				ImGui::DragFloat3("SphereTranslate", &transform.translate.x, 0.01f);
-				ImGui::DragFloat3("SphereRotate", &transform.rotate.x, 0.01f);
-				ImGui::DragFloat3("SphereScale", &transform.scale.x, 0.01f);
-				if (ImGui::Button("Reset")) {
-					transform = { {1.0f,1.0f,1.0f},{0.0f,0.0f,0.0f},{-0.8f,0.0f,0.0f} };
-				}
-    			ImGui::ColorEdit3("sphereColor", (float*)&objectColor);
-    			ImGui::Checkbox("Sphere Enable Lighting", reinterpret_cast<bool*>(&materialData->enableLighting));
-			}*/
 
 			if (ImGui::CollapsingHeader("Model")) {
 				ImGui::DragFloat3("objTranslate", &objTransform.translate.x, 0.01f);
@@ -1405,28 +1439,11 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
     			ImGui::Checkbox("Model Enable Lighting", reinterpret_cast<bool*>(&materialDataModel->enableLighting));
 			}
 
-			/*if (ImGui::CollapsingHeader("Sprite")) {
-				ImGui::DragFloat3("SpriteTranslate", &transformSprite.translate.x, 1.0f);
-				ImGui::DragFloat3("SpriteRotate", &transformSprite.rotate.x, 0.01f);
-				ImGui::DragFloat3("SpriteScale", &transformSprite.scale.x, 0.01f);
-    			if (ImGui::Button("Reset")) {
-					transformSprite = { {1.0f,1.0f,1.0f},{0.0f,0.0f,0.0f},{0.0f,0.0f,0.0f} };
-    			}
-    			ImGui::Checkbox("viewSprite", &viewSprite);
-			}
-			//ImGui::Checkbox("useMonsterBall", &useMonsterBall);*/
-
 			if (ImGui::CollapsingHeader("Lighting")) {
 	    		ImGui::ColorEdit3("LightColor", (float*)&lightColor);
 	    		ImGui::SliderFloat3("LightDirectional",(float*) &lightDirection,-1.0f,1.0f);
 	    		ImGui::DragFloat("Intensity", &light.intensity, 0.01f);
 			}
-
-			/*if (ImGui::CollapsingHeader("UV")) {
-	    		ImGui::DragFloat2("UVTranslate", &uvTransformSprite.translate.x, 0.01f, -10.0f, 10.0f);
-    			ImGui::DragFloat2("UVScele", &uvTransformSprite.scale.x, 0.01f, -10.0f, 10.0f);
-    			ImGui::SliderAngle("UVRorate", &uvTransformSprite.rotate.z);
-			}*/
 
 			ImGui::End();
 
@@ -1499,6 +1516,8 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 			commandList->SetGraphicsRootConstantBufferView(1, wvpResource->GetGPUVirtualAddress());
 			// SRVのDescriptorTableの先頭を設定
 			commandList->SetGraphicsRootDescriptorTable(2, useMonsterBall ? textureSrvHandleGPU2 : textureSrvHandleGPU);
+			// instancing用のDataを読むためにstructuredBufferのSRVを設定
+			commandList->SetGraphicsRootDescriptorTable(4, instancingSrvHandleGPU);
 			// 描画
 			//commandList->DrawIndexedInstanced(kNumIndices, 1, 0, 0, 0);
 
@@ -1506,7 +1525,8 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 			commandList->SetGraphicsRootConstantBufferView(0, materialResourceModel->GetGPUVirtualAddress());
 			commandList->SetGraphicsRootConstantBufferView(3, directionalLightResource->GetGPUVirtualAddress());
 			commandList->SetGraphicsRootConstantBufferView(1, objResource->GetGPUVirtualAddress());
-			commandList->DrawInstanced(UINT(modelData.vertices.size()), instanceCount, 0, 0);
+			commandList->DrawInstanced(UINT(modelData.vertices.size()), kNumInstance, 0, 0);
+
 
 			commandList->SetGraphicsRootDescriptorTable(2, textureSrvHandleGPU);
 
