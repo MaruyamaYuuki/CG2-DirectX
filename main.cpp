@@ -15,6 +15,7 @@
 #include "Input.h"
 #include "WinApp.h"
 
+
 #pragma comment (lib, "dxcompiler.lib")
 
 struct Vector2 { float x, y; };
