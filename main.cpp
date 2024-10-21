@@ -1,4 +1,4 @@
-#include <cstdint>
+#include <cmath>
 #include <string>
 #include <format>
 #include <d3d12.h>
