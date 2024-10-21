@@ -25,8 +25,6 @@ extern IMGUI_IMPL_API LRESULT ImGui_ImplWin32_WndProcHandler(HWND hwnd, UINT msg
 
 #pragma comment (lib, "d3d12.lib")
 #pragma comment (lib, "dxgi.lib")
-#pragma comment(lib, "dinput8.lib")
-#pragma comment (lib, "dxguid.lib")
 #pragma comment (lib, "dxcompiler.lib")
 
 struct Vector2 { float x, y; };
