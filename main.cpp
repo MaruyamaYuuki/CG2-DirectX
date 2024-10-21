@@ -18,6 +18,7 @@
 #define _USE_MATH_DEFINES
 #include <math.h>
 #include "Input.h"
+#include "WinApp.h"
 
 #pragma comment (lib, "d3d12.lib")
 #pragma comment (lib, "dxgi.lib")
@@ -614,8 +615,10 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	D3DResourceLeakChecker leakChek;
 
 	Input* input = nullptr;
+	WinApp* winApp = nullptr;
 #pragma region windowの生成
-
+	winApp = new WinApp();
+	winApp->Initialize();
 #pragma endregion
 
 #ifdef _DEBUG
@@ -1430,7 +1433,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 
 	CloseHandle(fenceEvent);
 	delete input;
-
+	delete winApp;
 
 #ifdef _DEBUG
 
