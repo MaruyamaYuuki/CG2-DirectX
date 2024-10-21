@@ -3,6 +3,7 @@
 #define DIRECTINPUT_VERSION   0x0800
 #include <dinput.h>
 #include <wrl.h>
+#include "WinApp.h"
 
 // 入力
 class Input {
@@ -12,7 +13,7 @@ public:
 
 public:
 	// 初期化
-	void Initialize(HINSTANCE hInstance, HWND hdnw);
+	void Initialize(WinApp* winApp);
 
 	// 更新
 	void Update();
@@ -40,4 +41,7 @@ private:
 	BYTE key[256] = {};
 	// 全開の全キーの状態
 	BYTE keyPre[256] = {};
+
+	// WindowsAPI
+	WinApp* winApp = nullptr;
 };

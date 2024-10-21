@@ -1,6 +1,6 @@
 #pragma once
 #include <Windows.h>
-
+#include <cstdint>
 
 // WindowsAPI
 class WinApp {
@@ -20,6 +20,9 @@ public:
 
 	// Getter
 	HINSTANCE GetHInstance()const { return wc.hInstance; }
+
+	// 終了
+	void Finalize();
 
 public:
 	// クライアント領域のサイズ

@@ -1,4 +1,4 @@
-#include <cstdint>
+#include <cmath>
 #include <string>
 #include <format>
 #include <d3d12.h>
@@ -691,7 +691,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 
 	// 入力の初期化
 	input = new Input();
-	input->Initialize(winApp->GetHInstance(), winApp->GetHwnd());
+	input->Initialize(winApp);
 
 #ifdef _DEBUG
 	Microsoft::WRL::ComPtr<ID3D12InfoQueue> infoQueue = nullptr;
@@ -1433,14 +1433,12 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 
 	CloseHandle(fenceEvent);
 	delete input;
-	delete winApp;
 
 #ifdef _DEBUG
 
 #endif
-	CloseWindow(winApp->GetHwnd());
-
-	CoUninitialize();
+	winApp->Finalize();
+	delete winApp;
 
 	return 0;
 }
