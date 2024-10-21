@@ -12,9 +12,6 @@ public:
 	// 初期化
 	void Initialize();
 
-	// 更新
-	void Update();
-
 	// Getter
 	HWND GetHwnd()const { return hwnd; }
 
@@ -23,6 +20,9 @@ public:
 
 	// 終了
 	void Finalize();
+
+	// メッセージ処理
+	bool ProcessMessage();
 
 public:
 	// クライアント領域のサイズ
