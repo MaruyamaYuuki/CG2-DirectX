@@ -8,7 +8,7 @@ struct TransFormationMatrix
 struct ParticleForGPU{
     float32_t4x4 WVP;
     float32_t4x4 World;
-	float32_t4x4 color;
+	float32_t4 color;
 };
 StructuredBuffer<ParticleForGPU> gParticle : register(t0);
 
@@ -16,7 +16,7 @@ struct VertexShaderInput
 {
 	float32_t4 position : POSITION0;
 	float32_t2 texccord : TEXCOORD0;
-    float32_t4 color : COLOR0;
+    float32_t3 normal : NORMAL0;
 };
 
 VertexShaderOutput main(VertexShaderInput input, uint32_t instanceId : SV_InstanceID)
