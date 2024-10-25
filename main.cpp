@@ -21,6 +21,7 @@
 #include <wrl.h>
 #define _USE_MATH_DEFINES
 #include <math.h>
+#include <numbers>
 extern IMGUI_IMPL_API LRESULT ImGui_ImplWin32_WndProcHandler(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam);
 
 #pragma comment (lib, "d3d12.lib")
@@ -1379,7 +1380,12 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	
 	Transform transform{ {1.0f,1.0f,1.0f},{0.0f,0.0f,0.0f},{-0.8f,0.0f,0.0f} };
 	Transform objTransform{ {1.0f,1.0f,1.0f},{0.0f,3.0f,0.0f},{0.0f,0.0f,0.0f} };
-	Transform cameraTransform{ {1.0f,1.0f,1.0f},{0.0f,0.0f,0.0f},{0.0f,0.0f,-10.0f} };
+	Transform cameraTransform{
+		{1.0f,1.0f,1.0f},
+		{std::numbers::pi_v<float> / 3.0f ,std::numbers::pi_v<float>,0.0f},
+		{0.0f,23.0f,10.0f} };
+
+
 
 	Transform uvTransformSprite{
 		{1.0f,1.0f,1.0f},
@@ -1402,6 +1408,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	bool useMonsterBall = true;
 	bool viewSprite = true;
 	int instanceCount = 10;
+	bool useBillboard = true;
 
 	// 出力ウィンドウへの文字出力
 	Log("Hello,DirectX!\n");
@@ -1439,13 +1446,27 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 			Matrix4x4 worldViewProjectionMatrixSprite = Multiply(transformationMatrixDataSprite->World, Multiply(viewMatrixSprite, projectionMatrixSprite));
 			transformationMatrixDataSprite->WVP = worldViewProjectionMatrixSprite;
 
+			Matrix4x4 backToFrontMatrix = MakeRotateYMatrix(std::numbers::pi_v<float>);
+			Matrix4x4 billbordMatrix = Multiply(backToFrontMatrix, cameraMatrix);
+			billbordMatrix.m[3][0] = 0.0f;
+			billbordMatrix.m[3][1] = 0.0f;
+			billbordMatrix.m[3][2] = 0.0f;
+
 			uint32_t numInstance = 0;
 			for (uint32_t index = 0; index < kNumMaxInstance; ++index) {
 				if (particles[index].lifeTime <= particles[index].currentTime) {
 					continue;
 				}
-				Matrix4x4 worldMatrix =
-					MakeAffineMatrix(particles[index].transform.scale, particles[index].transform.rotate, particles[index].transform.translate);
+				Matrix4x4 scaleMatrix = MakeTranslateMatrix(particles[index].transform.scale);
+				Matrix4x4 translateMatrix = MakeTranslateMatrix(particles[index].transform.translate);
+				Matrix4x4 worldMatrix;
+				if (useBillboard) {
+					worldMatrix= Multiply(Multiply(scaleMatrix, billbordMatrix), translateMatrix);
+				}
+				else {
+					worldMatrix =
+						MakeAffineMatrix(particles[index].transform.scale, particles[index].transform.rotate, particles[index].transform.translate);
+				}
 				Matrix4x4 worldViewProjectionMatrix2
 					= Multiply(worldMatrix, Multiply(viewMatrix, projectionMatrix));
 				particles[index].transform.translate.x += particles[index].velocity.x * kDeltaTime;
@@ -1486,6 +1507,8 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	    		ImGui::SliderFloat3("LightDirectional",(float*) &lightDirection,-1.0f,1.0f);
 	    		ImGui::DragFloat("Intensity", &light.intensity, 0.01f);
 			}
+
+			ImGui::Checkbox("useBillboard", &useBillboard);
 
 			ImGui::End();
 
