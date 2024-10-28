@@ -1,7 +1,6 @@
 #include <cmath>
 #include <cassert>
 #include <dxgidebug.h>
-#include <dxcapi.h>
 #include "externals/DirectXTex//DirectXTex.h"
 #include "externals/DirectXTex//d3dx12.h"
 #include <vector>
@@ -13,8 +12,6 @@
 #include "Input.h"
 #include "WinApp.h"
 #include "DirectXCommon.h"
-
-#pragma comment (lib, "dxcompiler.lib")
 
 struct Vector2 { float x, y; };
 struct Vector3 { float x, y, z; };
