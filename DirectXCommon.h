@@ -23,6 +23,11 @@ public:
 	/// </summary>
 	void Initialize(WinApp* winApp);
 
+	// 描画前処理
+	void PreDraw();
+	// 描画後処理
+	void PostDraw();
+
 	/// <summary>
 	/// DepthStencilTextureの生成
 	/// </summary>
@@ -151,6 +156,8 @@ private:
 
 	Microsoft::WRL::ComPtr<ID3D12Resource> depthStencilResource;
 
+	// フェンス
+	uint64_t fenceValue = 0;
 	Microsoft::WRL::ComPtr<ID3D12Fence> fence;
 	HANDLE fenceEvent;
 
@@ -158,4 +165,7 @@ private:
 	D3D12_VIEWPORT viewport{};
 	// シザー矩形
 	D3D12_RECT scissorRect{};
+
+	// TransitionBarrierの設定
+	D3D12_RESOURCE_BARRIER barrier{};
 };
