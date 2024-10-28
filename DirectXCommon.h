@@ -42,6 +42,16 @@ public:
 	/// </summary>
 	Microsoft::WRL::ComPtr<ID3D12Resource> CreateBufferResource(size_t& sizeInBytes);
 
+	///<summary>
+	/// テクスチャリソース生成
+	/// </summary>
+	Microsoft::WRL::ComPtr<ID3D12Resource> CreateTextureResource(ID3D12Device* device, const DirectX::TexMetadata& metadata);
+
+	/// <summary>
+	/// テクスチャデータの転送
+	/// </summary>
+	void UploadTextureData(ID3D12Resource* texture, const DirectX::ScratchImage& mipImages);
+
 	/// <summary>
 	/// DepthStencilTextureの生成
 	/// </summary>
