@@ -28,6 +28,20 @@ public:
 	// 描画後処理
 	void PostDraw();
 
+	// getter
+	ID3D12Device* GetDevice()const { return device.Get(); }
+	ID3D12GraphicsCommandList* GetCommandlist()const { return commandList.Get(); }
+
+	// シェーダーコンパイル
+	Microsoft::WRL::ComPtr<IDxcBlob> CompileShader(
+		const std::wstring& filePath,
+		const wchar_t* profile);
+
+	/// <summary>
+	/// バッファリソースの生成
+	/// </summary>
+	Microsoft::WRL::ComPtr<ID3D12Resource> CreateBufferResource(size_t& sizeInBytes);
+
 	/// <summary>
 	/// DepthStencilTextureの生成
 	/// </summary>
@@ -165,6 +179,10 @@ private:
 	D3D12_VIEWPORT viewport{};
 	// シザー矩形
 	D3D12_RECT scissorRect{};
+
+	Microsoft::WRL::ComPtr<IDxcUtils> dxcUtils;
+	Microsoft::WRL::ComPtr<IDxcCompiler3> dxcCompiler;
+	Microsoft::WRL::ComPtr<IDxcIncludeHandler> includeHandler;
 
 	// TransitionBarrierの設定
 	D3D12_RESOURCE_BARRIER barrier{};
