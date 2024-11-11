@@ -9,6 +9,9 @@
 #include "array"
 #include "externals/imgui/imgui_impl_dx12.h"
 #include "externals/imgui/imgui_impl_win32.h"
+#include "externals/DirectXTex/DirectXTex.h"
+#include "externals/DirectXTex//d3dx12.h"
+#include <vector>
 #include <dxcapi.h>
 
 #pragma comment (lib, "d3d12.lib")
@@ -40,7 +43,7 @@ public:
 	/// <summary>
 	/// バッファリソースの生成
 	/// </summary>
-	Microsoft::WRL::ComPtr<ID3D12Resource> CreateBufferResource(size_t& sizeInBytes);
+	Microsoft::WRL::ComPtr<ID3D12Resource> CreateBufferResource(size_t sizeInBytes);
 
 	///<summary>
 	/// テクスチャリソース生成
@@ -51,6 +54,13 @@ public:
 	/// テクスチャデータの転送
 	/// </summary>
 	void UploadTextureData(ID3D12Resource* texture, const DirectX::ScratchImage& mipImages);
+
+	/// <summary>
+	/// テクスチャファイルの読み込み
+	/// </summary>
+	/// <pragma name="finePath">テクスチャファイルのパス</param>
+	/// <returns>画像イメージデータ</returns>
+	static DirectX::ScratchImage LoadTexture(const std::string& filePath);
 
 	/// <summary>
 	/// DepthStencilTextureの生成
