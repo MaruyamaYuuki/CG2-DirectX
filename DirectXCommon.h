@@ -191,7 +191,7 @@ private:
 	Microsoft::WRL::ComPtr<ID3D12Resource> depthStencilResource;
 
 	// フェンス
-	uint64_t fenceValue = 0;
+	UINT64 fenceValue = 0;
 	Microsoft::WRL::ComPtr<ID3D12Fence> fence;
 	HANDLE fenceEvent;
 
