@@ -45,6 +45,12 @@ struct Particle {
 	float lifeTime;
 	float currentTime;
 };
+struct Emitter {
+	Transform transfrom;
+	uint32_t count;
+	float frequency;
+	float frequenTime;
+};
 struct VertexData {
 	Vector4 position;
 	Vector2 texcoord;
@@ -664,6 +670,14 @@ Particle MakeNewParticle(std::mt19937& randomEngine) {
 	return particle;
 }
 
+std::list<Particle> Emit(const Emitter& emitter, std::mt19937& randomEngine) {
+	std::list<Particle> particles;
+	for (uint32_t count = 0; count < emitter.count; ++count) {
+		particles.push_back(MakeNewParticle(randomEngine));
+	}
+	return particles;
+}
+
 // Windowsアプリでのエントリーポイント(main関数)
 int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	D3DResourceLeakChecker leakChek;
@@ -1161,11 +1175,17 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	D3D12_GPU_DESCRIPTOR_HANDLE instancingSrvHandleGPU = GetGPUDescriptorHandle(srvDescriptorHeap, descriptorSizeSRV, 3);
 	device->CreateShaderResourceView(instancingResource.Get(), &instancingSrvDesc, instancingSrvHandleCPU);
 
+	Emitter emitter{};
+	emitter.count = 3;
+	emitter.frequency = 0.5f;
+	emitter.frequenTime = 0.0f;
 	std::random_device seedGenerator;
 	std::mt19937 randomEngine(seedGenerator());
-	Particle particles[kNumMaxInstance];
+	std::list<Particle>particles;
 	for (uint32_t index = 0; index < kNumMaxInstance; ++index) {
-		particles[index] = MakeNewParticle(randomEngine);
+		particles.push_back(MakeNewParticle(randomEngine));
+		particles.push_back(MakeNewParticle(randomEngine));
+		particles.push_back(MakeNewParticle(randomEngine));
 	}
 	const float kDeltaTime = 1.0f / 60.0f;
 
@@ -1453,32 +1473,41 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 			billbordMatrix.m[3][2] = 0.0f;
 
 			uint32_t numInstance = 0;
-			for (uint32_t index = 0; index < kNumMaxInstance; ++index) {
-				if (particles[index].lifeTime <= particles[index].currentTime) {
+			for (std::list<Particle>::iterator particleIterator = particles.begin(); particleIterator != particles.end();) {
+				if ((*particleIterator).lifeTime <= (*particleIterator).currentTime) {
 					continue;
 				}
-				Matrix4x4 scaleMatrix = MakeTranslateMatrix(particles[index].transform.scale);
-				Matrix4x4 translateMatrix = MakeTranslateMatrix(particles[index].transform.translate);
+				Matrix4x4 scaleMatrix = MakeTranslateMatrix(particleIterator->transform.scale);
+				Matrix4x4 translateMatrix = MakeTranslateMatrix(particleIterator->transform.translate);
 				Matrix4x4 worldMatrix;
 				if (useBillboard) {
 					worldMatrix= Multiply(Multiply(scaleMatrix, billbordMatrix), translateMatrix);
 				}
 				else {
 					worldMatrix =
-						MakeAffineMatrix(particles[index].transform.scale, particles[index].transform.rotate, particles[index].transform.translate);
+						MakeAffineMatrix(particleIterator->transform.scale, particleIterator->transform.rotate, particleIterator->transform.translate);
 				}
 				Matrix4x4 worldViewProjectionMatrix2
 					= Multiply(worldMatrix, Multiply(viewMatrix, projectionMatrix));
-				particles[index].transform.translate.x += particles[index].velocity.x * kDeltaTime;
-				particles[index].transform.translate.y += particles[index].velocity.y * kDeltaTime;
-				particles[index].transform.translate.z += particles[index].velocity.z * kDeltaTime;
-				particles[index].currentTime += kDeltaTime;
-				instancingData[numInstance].WVP = worldViewProjectionMatrix2;
-				instancingData[numInstance].World = worldMatrix;
-				instancingData[numInstance].color = particles[index].color;
-				float alpha = 1.0f - (particles[index].currentTime / particles[index].lifeTime);
-				instancingData[numInstance].color.w = alpha;
-				++numInstance;
+				particleIterator->transform.translate.x += particleIterator->velocity.x * kDeltaTime;
+				particleIterator->transform.translate.y += particleIterator->velocity.y * kDeltaTime;
+				particleIterator->transform.translate.z += particleIterator->velocity.z * kDeltaTime;
+				particleIterator->currentTime += kDeltaTime;
+				if (numInstance < kNumMaxInstance) {
+    				instancingData[numInstance].WVP = worldViewProjectionMatrix2;
+    				instancingData[numInstance].World = worldMatrix;
+    				instancingData[numInstance].color = particleIterator->color;
+    				float alpha = 1.0f - (particleIterator->currentTime / particleIterator->lifeTime);
+    				instancingData[numInstance].color.w = alpha;
+    				++numInstance;
+				}
+				++particleIterator;
+			}
+
+			emitter.frequenTime += kDeltaTime;
+			if (emitter.frequency <= emitter.frequenTime) {
+				particles.splice(particles.end(), Emit(emitter, randomEngine));
+				emitter.frequenTime -= emitter.frequency;
 			}
 
 			// 開発用UIの処理
@@ -1509,6 +1538,10 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 			}
 
 			ImGui::Checkbox("useBillboard", &useBillboard);
+
+			if (ImGui::Button("Add Particle")) {
+				particles.splice(particles.end(), Emit(emitter, randomEngine));
+			}
 
 			ImGui::End();
 
