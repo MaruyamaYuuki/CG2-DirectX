@@ -38,6 +38,10 @@ struct Transform {
 	Vector3 rotate;
 	Vector3 translate;
 };
+struct AABB {
+	Vector3 min; 
+	Vector3 max; 
+};
 struct Particle {
 	Transform transform;
 	Vector3 velocity;
@@ -50,6 +54,10 @@ struct Emitter {
 	uint32_t count;
 	float frequency;
 	float frequenTime;
+};
+struct AccelerationField {
+	Vector3 acceleration;
+	AABB area;
 };
 struct VertexData {
 	Vector4 position;
@@ -679,6 +687,24 @@ std::list<Particle> Emit(const Emitter& emitter, std::mt19937& randomEngine) {
 		particles.push_back(MakeNewParticle(randomEngine, emitter.transfrom.translate));
 	}
 	return particles;
+}
+
+bool IsCollision(const AABB& aabb, const Vector3& point) {
+	// X軸方向の判定
+	if (point.x < aabb.min.x || point.x > aabb.max.x) {
+		return false;
+	}
+	// Y軸方向の判定
+	if (point.y < aabb.min.y || point.y > aabb.max.y) {
+		return false;
+	}
+	// Z軸方向の判定
+	if (point.z < aabb.min.z || point.z > aabb.max.z) {
+		return false;
+	}
+
+	// すべての条件を満たしている場合は衝突している
+	return true;
 }
 
 // Windowsアプリでのエントリーポイント(main関数)
@@ -1419,6 +1445,11 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 		{0.0f,0.0f,0.0f},
 	};
 
+	AccelerationField accelerationField;
+	accelerationField.acceleration = { 15.0f,0.0f,0.0f };
+	accelerationField.area.min = { -1.0f,-1.0f,-1.0f };
+	accelerationField.area.max = { 1.0f,1.0f,1.0f };
+
 	// ImGuiの初期化
 	IMGUI_CHECKVERSION();
 	ImGui::CreateContext();
@@ -1435,6 +1466,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	bool viewSprite = true;
 	int instanceCount = 10;
 	bool useBillboard = true;
+	bool isMove = false;
 
 	// 出力ウィンドウへの文字出力
 	Log("Hello,DirectX!\n");
@@ -1484,27 +1516,33 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 					particleIterator = particles.erase(particleIterator);
 					continue;
 				}
-				Matrix4x4 scaleMatrix = MakeTranslateMatrix(particleIterator->transform.scale);
-				Matrix4x4 translateMatrix = MakeTranslateMatrix(particleIterator->transform.translate);
+				Matrix4x4 scaleMatrix = MakeTranslateMatrix((*particleIterator).transform.scale);
+				Matrix4x4 translateMatrix = MakeTranslateMatrix((*particleIterator).transform.translate);
 				Matrix4x4 worldMatrix;
 				if (useBillboard) {
 					worldMatrix= Multiply(Multiply(scaleMatrix, billbordMatrix), translateMatrix);
 				}
 				else {
 					worldMatrix =
-						MakeAffineMatrix(particleIterator->transform.scale, particleIterator->transform.rotate, particleIterator->transform.translate);
+						MakeAffineMatrix((*particleIterator).transform.scale, (*particleIterator).transform.rotate, (*particleIterator).transform.translate);
 				}
 				Matrix4x4 worldViewProjectionMatrix2
 					= Multiply(worldMatrix, Multiply(viewMatrix, projectionMatrix));
-				particleIterator->transform.translate.x += particleIterator->velocity.x * kDeltaTime;
-				particleIterator->transform.translate.y += particleIterator->velocity.y * kDeltaTime;
-				particleIterator->transform.translate.z += particleIterator->velocity.z * kDeltaTime;
-				particleIterator->currentTime += kDeltaTime;
+				// Fieldの範囲内のParticleには加速度を適用する
+				if (IsCollision(accelerationField.area, (*particleIterator).transform.translate) && isMove) {
+					(*particleIterator).velocity.x += accelerationField.acceleration.x * kDeltaTime;
+					(*particleIterator).velocity.y += accelerationField.acceleration.y * kDeltaTime;
+					(*particleIterator).velocity.z += accelerationField.acceleration.z * kDeltaTime;
+				}
+				(*particleIterator).transform.translate.x += (*particleIterator).velocity.x * kDeltaTime;
+				(*particleIterator).transform.translate.y += (*particleIterator).velocity.y * kDeltaTime;
+				(*particleIterator).transform.translate.z += (*particleIterator).velocity.z * kDeltaTime;
+				(*particleIterator).currentTime += kDeltaTime;
 				if (numInstance < kNumMaxInstance) {
     				instancingData[numInstance].WVP = worldViewProjectionMatrix2;
     				instancingData[numInstance].World = worldMatrix;
-    				instancingData[numInstance].color = particleIterator->color;
-    				float alpha = 1.0f - (particleIterator->currentTime / particleIterator->lifeTime);
+    				instancingData[numInstance].color = (*particleIterator).color;
+    				float alpha = 1.0f - ((*particleIterator).currentTime / (*particleIterator).lifeTime);
     				instancingData[numInstance].color.w = alpha;
     				++numInstance;
 				}
@@ -1550,6 +1588,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 				particles.splice(particles.end(), Emit(emitter, randomEngine));
 			}
 			ImGui::DragFloat3("EmitterTranslate", &emitter.transfrom.translate.x, 0.01f, -100.0f, 100.0f);
+			ImGui::Checkbox("Move", &isMove);
 
 			ImGui::End();
 
