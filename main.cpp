@@ -655,12 +655,15 @@ struct D3DResourceLeakChecker {
 	}
 };
 
-Particle MakeNewParticle(std::mt19937& randomEngine) {
+Particle MakeNewParticle(std::mt19937& randomEngine, const Vector3 translate) {
 	std::uniform_real_distribution<float>distribution(-1.0f, 1.0f);
 	Particle particle;
 	particle.transform.scale = { 1.0f,1.0f,1.0f };
 	particle.transform.rotate = { 0.0f,DirectX::XM_PI,0.0f };
-	particle.transform.translate = { distribution(randomEngine),distribution(randomEngine),distribution(randomEngine) };
+	Vector3 randomTranslate{ distribution(randomEngine),distribution(randomEngine),distribution(randomEngine) };
+	particle.transform.translate.x = translate.x + randomTranslate.x;
+	particle.transform.translate.y = translate.y + randomTranslate.y;
+	particle.transform.translate.z = translate.z + randomTranslate.z;
 	particle.velocity = { distribution(randomEngine),distribution(randomEngine),distribution(randomEngine) };
 	std::uniform_real_distribution<float> distColor(0.0f, 1.0f);
 	particle.color = { distColor(randomEngine),distColor(randomEngine),distColor(randomEngine),1.0f };
@@ -673,7 +676,7 @@ Particle MakeNewParticle(std::mt19937& randomEngine) {
 std::list<Particle> Emit(const Emitter& emitter, std::mt19937& randomEngine) {
 	std::list<Particle> particles;
 	for (uint32_t count = 0; count < emitter.count; ++count) {
-		particles.push_back(MakeNewParticle(randomEngine));
+		particles.push_back(MakeNewParticle(randomEngine, emitter.transfrom.translate));
 	}
 	return particles;
 }
@@ -1176,6 +1179,9 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	device->CreateShaderResourceView(instancingResource.Get(), &instancingSrvDesc, instancingSrvHandleCPU);
 
 	Emitter emitter{};
+	emitter.transfrom.translate = { 0.0f,0.0f,0.0f };
+	emitter.transfrom.rotate = { 0.0f,0.0f,0.0f };
+	emitter.transfrom.scale = { 1.0f,1.0f,1.0f };
 	emitter.count = 3;
 	emitter.frequency = 0.5f;
 	emitter.frequenTime = 0.0f;
@@ -1183,9 +1189,9 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	std::mt19937 randomEngine(seedGenerator());
 	std::list<Particle>particles;
 	for (uint32_t index = 0; index < kNumMaxInstance; ++index) {
-		particles.push_back(MakeNewParticle(randomEngine));
-		particles.push_back(MakeNewParticle(randomEngine));
-		particles.push_back(MakeNewParticle(randomEngine));
+		particles.push_back(MakeNewParticle(randomEngine, emitter.transfrom.translate));
+		particles.push_back(MakeNewParticle(randomEngine, emitter.transfrom.translate));
+		particles.push_back(MakeNewParticle(randomEngine, emitter.transfrom.translate));
 	}
 	const float kDeltaTime = 1.0f / 60.0f;
 
@@ -1475,6 +1481,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 			uint32_t numInstance = 0;
 			for (std::list<Particle>::iterator particleIterator = particles.begin(); particleIterator != particles.end();) {
 				if ((*particleIterator).lifeTime <= (*particleIterator).currentTime) {
+					particleIterator = particles.erase(particleIterator);
 					continue;
 				}
 				Matrix4x4 scaleMatrix = MakeTranslateMatrix(particleIterator->transform.scale);
@@ -1542,6 +1549,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 			if (ImGui::Button("Add Particle")) {
 				particles.splice(particles.end(), Emit(emitter, randomEngine));
 			}
+			ImGui::DragFloat3("EmitterTranslate", &emitter.transfrom.translate.x, 0.01f, -100.0f, 100.0f);
 
 			ImGui::End();
 
