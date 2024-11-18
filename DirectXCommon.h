@@ -204,6 +204,9 @@ private:
 	Microsoft::WRL::ComPtr<IDxcCompiler3> dxcCompiler;
 	Microsoft::WRL::ComPtr<IDxcIncludeHandler> includeHandler;
 
+	std::vector<Microsoft::WRL::ComPtr<ID3D12Resource>> temporaryResources_;
+
+
 	// TransitionBarrierの設定
 	D3D12_RESOURCE_BARRIER barrier{};
 };
