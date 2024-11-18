@@ -356,9 +356,9 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	input->Initialize(winApp);
 	// スプライト共通部の初期化
 	spriteCommon = new SpriteCommon;
-	spriteCommon->Initialize();
+	spriteCommon->Initialize(dxCommon);
 
-	// RootSignature作成
+	/*	// RootSignature作成
 	D3D12_ROOT_SIGNATURE_DESC descriptitonRootSignature{};
 	descriptitonRootSignature.Flags =
 		D3D12_ROOT_SIGNATURE_FLAG_ALLOW_INPUT_ASSEMBLER_INPUT_LAYOUT;
@@ -496,7 +496,8 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	Microsoft::WRL::ComPtr<ID3D12PipelineState> graphicsPipelineState = nullptr;
 	hr = dxCommon->GetDevice()->CreateGraphicsPipelineState(&graphicsPipelineStateDesc,
 		IID_PPV_ARGS(&graphicsPipelineState));
-	assert(SUCCEEDED(hr));
+	assert(SUCCEEDED(hr));*/
+
 
 	Sprite* sprite = new Sprite();
 	sprite->Initialize();
@@ -823,15 +824,18 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 
 
 			dxCommon->PreDraw();
+
+			// Spriteの描画準備
+			spriteCommon->SettingCommonDraw();
 			// RotSignatureを設定。PSOに設定しているけどベット設定が必要
-			dxCommon->GetCommandlist()->SetGraphicsRootSignature(rootSignature.Get());
-			dxCommon->GetCommandlist()->SetPipelineState(graphicsPipelineState.Get());
+			//dxCommon->GetCommandlist()->SetGraphicsRootSignature(rootSignature.Get());
+			//dxCommon->GetCommandlist()->SetPipelineState(graphicsPipelineState.Get());
 			dxCommon->GetCommandlist()->IASetVertexBuffers(0, 1, &vertexBufferView);
 			//commandList->IASetIndexBuffer(&indexBufferView);
 
 
 			// 形状を設定
-			dxCommon->GetCommandlist()->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+			//dxCommon->GetCommandlist()->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 			// マテリアルCBufferの場所を設定
 			dxCommon->GetCommandlist()->SetGraphicsRootConstantBufferView(0, materialResource->GetGPUVirtualAddress());
 			// 平行光源のCBufferの場所を設定
