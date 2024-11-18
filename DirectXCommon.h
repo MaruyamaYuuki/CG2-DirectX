@@ -13,6 +13,7 @@
 #include "externals/DirectXTex//d3dx12.h"
 #include <vector>
 #include <dxcapi.h>
+#include <chrono>
 
 #pragma comment (lib, "d3d12.lib")
 #pragma comment (lib, "dxgi.lib")
@@ -206,7 +207,15 @@ private:
 
 	std::vector<Microsoft::WRL::ComPtr<ID3D12Resource>> temporaryResources_;
 
-
 	// TransitionBarrierの設定
 	D3D12_RESOURCE_BARRIER barrier{};
+
+	// 記録時間
+	std::chrono::steady_clock::time_point reference_;
+
+private:
+	// FPS固定初期化
+	void InitialiseFixFPS();
+	/// FPS固定更新
+	void UpdateFixFPS();
 };
