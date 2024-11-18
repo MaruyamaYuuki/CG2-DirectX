@@ -23,6 +23,8 @@
     <ClCompile Include="Input.cpp" />
     <ClCompile Include="Logger.cpp" />
     <ClCompile Include="main.cpp" />
+    <ClCompile Include="Sprite.cpp" />
+    <ClCompile Include="SpriteCommon.cpp" />
     <ClCompile Include="StringUtility.cpp" />
     <ClCompile Include="WinApp.cpp" />
   </ItemGroup>
@@ -40,6 +42,8 @@
     <ClInclude Include="Input.h" />
     <ClInclude Include="Logger.h" />
     <ClInclude Include="ResourceObject.h" />
+    <ClInclude Include="Sprite.h" />
+    <ClInclude Include="SpriteCommon.h" />
     <ClInclude Include="StringUtility.h" />
     <ClInclude Include="WinApp.h" />
   </ItemGroup>

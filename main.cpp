@@ -10,6 +10,8 @@
 #include "WinApp.h"
 #include "DirectXCommon.h"
 #include "D3DResourceLeakChecker.h"
+#include "Sprite.h"
+#include "SpriteCommon.h"
 
 #pragma comment (lib, "dxcompiler.lib")
 
@@ -338,23 +340,23 @@ ModelData LoadObjFile(const std::string& directoryPath, const std::string& filen
 int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	D3DResourceLeakChecker leakChek;
 
-	Input* input = nullptr;
 	WinApp* winApp = nullptr;
 	DirectXCommon* dxCommon = nullptr;
-#pragma region windowの生成
+	Input* input = nullptr;
+	SpriteCommon* spriteCommon = nullptr;
+
+	// WinAppの初期化
 	winApp = new WinApp();
 	winApp->Initialize();
-#pragma endregion
-
-
 	// DirectXの初期化
 	dxCommon = new DirectXCommon();
 	dxCommon->Initialize(winApp);
-
-
 	// 入力の初期化
 	input = new Input();
 	input->Initialize(winApp);
+	// スプライト共通部の初期化
+	spriteCommon = new SpriteCommon;
+	spriteCommon->Initialize();
 
 	// RootSignature作成
 	D3D12_ROOT_SIGNATURE_DESC descriptitonRootSignature{};
@@ -495,6 +497,9 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	hr = dxCommon->GetDevice()->CreateGraphicsPipelineState(&graphicsPipelineStateDesc,
 		IID_PPV_ARGS(&graphicsPipelineState));
 	assert(SUCCEEDED(hr));
+
+	Sprite* sprite = new Sprite();
+	sprite->Initialize();
 
 	// WVP用のリソースを作る
 	Microsoft::WRL::ComPtr<ID3D12Resource> wvpResource = dxCommon->CreateBufferResource(sizeof(TransformationMatrix));
@@ -865,6 +870,8 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	ImGui::DestroyContext();
 
 	//CloseHandle(fenceEvent);
+	delete sprite;
+	delete spriteCommon;
 	delete input;
 	delete dxCommon;
 
