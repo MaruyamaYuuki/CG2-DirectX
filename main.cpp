@@ -1429,12 +1429,26 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 			static ImVec4 lightColor = ImVec4(light.color.x, light.color.y, light.color.z, light.color.w);
 
 			if (ImGui::CollapsingHeader("Model")) {
-				ImGui::DragFloat3("objTranslate", &transforms[0].translate.x, 0.01f);
-				ImGui::DragFloat3("objRotate", &transforms[0].rotate.x, 0.01f);
-				ImGui::DragFloat3("objScale", &transforms[0].scale.x, 0.01f);
-				if (ImGui::Button("Reset")) {
-					objTransform = { {1.0f,1.0f,1.0f},{0.4f,3.0f,0.0f},{0.0f,0.0f,0.0f} };
+				for (uint32_t index = 0; index < kNumInstance; ++index) {
+					// 各モデル用のグループを作成
+					if (ImGui::TreeNode((std::string("Model ") + std::to_string(index)).c_str())) {
+						ImGui::DragFloat3(("Translate##" + std::to_string(index)).c_str(),
+							&transforms[index].translate.x, 0.01f);
+						ImGui::DragFloat3(("Rotate##" + std::to_string(index)).c_str(),
+							&transforms[index].rotate.x, 0.01f);
+						ImGui::DragFloat3(("Scale##" + std::to_string(index)).c_str(),
+							&transforms[index].scale.x, 0.01f);
+
+						// Resetボタン
+						if (ImGui::Button(("Reset##" + std::to_string(index)).c_str())) {
+							transforms[index] = { {1.0f, 1.0f, 1.0f}, {0.0f, 0.0f, 0.0f}, {0.0f, 0.0f, 0.0f} };
+						}
+
+						// TreeNodeの終了
+						ImGui::TreePop();
+					}
 				}
+
 				ImGui::ColorEdit3("objColor", (float*)&objColor);
     			ImGui::Checkbox("Model Enable Lighting", reinterpret_cast<bool*>(&materialDataModel->enableLighting));
 			}
