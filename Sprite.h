@@ -45,6 +45,17 @@ public:
 	// 描画
 	void Draw();
 
+	// getter
+	const Vector2& GetPosition()const { return position; }
+	float GetRotation()const { return rotation; }
+	const Vector4& GetColor()const { return materialData->color; }
+	const Vector2& GetSize()const { return size; }
+	// setter
+	void SetPosition(const Vector2& posisiton) { this->position = posisiton; }
+	void SetRoration(float rotation) { this->rotation = rotation; }
+	void SetColor(const Vector4& color) { materialData->color = color; }
+	void SetSize(const Vector2& size) { this->size = size; }
+
 private:
 	SpriteCommon* spriteCommon = nullptr;
 
@@ -63,4 +74,8 @@ private:
 	D3D12_INDEX_BUFFER_VIEW indexBufferView;
 
 	D3D12_GPU_DESCRIPTOR_HANDLE textureSrvHandleGPU;
+
+	Vector2 position = { 0.0f,0.0f };
+	float rotation = 0.0f;
+	Vector2 size = { 120.0f,120.0f };
 };

@@ -151,8 +151,17 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	spriteCommon = new SpriteCommon;
 	spriteCommon->Initialize(dxCommon);
 
-	Sprite* sprite = new Sprite();
-	sprite->Initialize(spriteCommon);
+	std::vector<Sprite*> sprites;
+	for (uint32_t i = 0; i < 5; ++i) {
+		Sprite* sprite = new Sprite();
+		sprite->Initialize(spriteCommon);
+
+		// 各スプライトに異なる位置を設定
+		Vector2 newPosition = {float(i * 200), 0 };
+		sprite->SetPosition(newPosition);
+
+		sprites.push_back(sprite);
+	}
 
 	// WVP用のリソースを作る
 	Microsoft::WRL::ComPtr<ID3D12Resource> wvpResource = dxCommon->CreateBufferResource(sizeof(Sprite::TransformationMatrix));
@@ -319,8 +328,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 
 	bool useMonsterBall = true;
 
-
-
+	float num = 0;
 
 	// 出力ウィンドウへの文字出力
 	//Log("Hello,DirectX!\n");
@@ -352,7 +360,10 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 			Matrix4x4 worldViewProjectionMatrix = Multiply(wvpData->World, Multiply(viewMatrix, projectionMatrix));
 			wvpData->WVP = worldViewProjectionMatrix;
 
-			sprite->Update();
+			for (Sprite* sprite : sprites) {
+				Vector2 position = sprite->GetPosition();
+				sprite->Update();
+			}
 
 			// 開発用UIの処理
 			//ImGui::ShowDemoWindow();
@@ -432,7 +443,9 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 			dxCommon->GetCommandlist()->SetGraphicsRootDescriptorTable(2, textureSrvHandleGPU);
 
 			// Spriteの描画
-			sprite->Draw();
+			for (Sprite* sprite : sprites) {
+				sprite->Draw();
+			}
 
 			// 実際のcommandListのImGuiの描画コマンドを積む
 			ImGui_ImplDX12_RenderDrawData(ImGui::GetDrawData(), dxCommon->GetCommandlist());
@@ -447,7 +460,10 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	ImGui::DestroyContext();
 
 	//CloseHandle(fenceEvent);
-	delete sprite;
+	for (Sprite* sprite : sprites) {
+		delete sprite;
+	}
+	sprites.clear();
 	delete spriteCommon;
 	delete input;
 	delete dxCommon;
