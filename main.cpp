@@ -361,7 +361,6 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 			wvpData->WVP = worldViewProjectionMatrix;
 
 			for (Sprite* sprite : sprites) {
-				Vector2 position = sprite->GetPosition();
 				sprite->Update();
 			}
 
