@@ -1,7 +1,8 @@
 #include "Sprite.h"
 #include "SpriteCommon.h"
+#include "TextureManager.h"
 
-void Sprite::Initialize(SpriteCommon* spriteCommon)
+void Sprite::Initialize(SpriteCommon* spriteCommon, std::string textureFilePath)
 {
 	// 引数で受け取ってメンバ変数に記録する
 	this->spriteCommon = spriteCommon;
@@ -50,6 +51,8 @@ void Sprite::Initialize(SpriteCommon* spriteCommon)
 	transformationMatrixData->World = MakeIdentity4x4();
 
 	textureSrvHandleGPU = spriteCommon->getDxCommon()->GetSRVGPUDescriptorHandle(1);
+
+	textureIndex = TextureManager::GetInstance()->GetTextureIndexByFilePath(textureFilePath);
 }
 
 void Sprite::Update()
@@ -97,6 +100,6 @@ void Sprite::Draw()
 	spriteCommon->getDxCommon()->GetCommandlist()->SetGraphicsRootConstantBufferView(1, transformationMatrixResource->GetGPUVirtualAddress());
 
 	// SRVのDescriptorTarbleの先頭を設定
-	spriteCommon->getDxCommon()->GetCommandlist()->SetGraphicsRootDescriptorTable(2, textureSrvHandleGPU);
+	spriteCommon->getDxCommon()->GetCommandlist()->SetGraphicsRootDescriptorTable(2, TextureManager::GetInstance()->GetSrvHandleGPU(textureIndex));
 	spriteCommon->getDxCommon()->GetCommandlist()->DrawIndexedInstanced(6, 1, 0, 0, 0);
 }

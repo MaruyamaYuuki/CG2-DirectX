@@ -7,6 +7,7 @@
 using namespace MathFunctions;
 
 class SpriteCommon;
+class TextureManager;
 
 // スプライト
 class Sprite {
@@ -37,7 +38,7 @@ public:
 	};
 public:
 	// 初期化
-	void Initialize(SpriteCommon* spriteCommon);
+	void Initialize(SpriteCommon* spriteCommon, std::string textureFilePath);
 
 	// 更新
 	void Update();
@@ -78,4 +79,7 @@ private:
 	Vector2 position = { 0.0f,0.0f };
 	float rotation = 0.0f;
 	Vector2 size = { 120.0f,120.0f };
+
+	// テクスチャ番号
+	uint32_t textureIndex = 0;
 };
