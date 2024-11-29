@@ -94,6 +94,9 @@ public:
     /// </summary>
 	D3D12_GPU_DESCRIPTOR_HANDLE GetSRVGPUDescriptorHandle(uint32_t index);
 
+	// 最大SRV数（最大テクスチャ枚数）
+	static const uint32_t kMaxSRVCount;
+
 private:
 	/// <summary>
 	/// デバイスの初期化
@@ -155,6 +158,8 @@ private:
 	/// </summary>
 	void ImGuiInitialize();
 
+
+
 private:
 	// DirectX12デバイス
 	Microsoft::WRL::ComPtr<ID3D12Device> device;
@@ -212,6 +217,8 @@ private:
 
 	// 記録時間
 	std::chrono::steady_clock::time_point reference_;
+
+
 
 private:
 	// FPS固定初期化

@@ -12,6 +12,7 @@
 #include "D3DResourceLeakChecker.h"
 #include "Sprite.h"
 #include "SpriteCommon.h"
+#include "TextureManager.h"
 
 #pragma comment (lib, "dxcompiler.lib")
 
@@ -150,6 +151,8 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	// スプライト共通部の初期化
 	spriteCommon = new SpriteCommon;
 	spriteCommon->Initialize(dxCommon);
+	// テスクチャマネージャの初期化
+	TextureManager::GetInstance()->Initialize();
 
 	std::vector<Sprite*> sprites;
 	for (uint32_t i = 0; i < 5; ++i) {
@@ -464,6 +467,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	}
 	sprites.clear();
 	delete spriteCommon;
+	TextureManager::GetInstance()->Finalize();
 	delete input;
 	delete dxCommon;
 
