@@ -325,7 +325,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 
 
 	// SRVの作成
-	dxCommon->GetDevice()->CreateShaderResourceView(textureResource2.Get(), &srvDesc2, textureSrvHandleCPU2);
+	//dxCommon->GetDevice()->CreateShaderResourceView(textureResource2.Get(), &srvDesc2, textureSrvHandleCPU2);
 	
 	Sprite::Transform transform{ {1.0f,1.0f,1.0f},{0.0f,0.0f,0.0f},{0.0f,0.0f,0.0f} };
 	Sprite::Transform cameraTransform{ {1.0f,1.0f,1.0f},{0.0f,0.0f,0.0f},{0.0f,0.0f,-10.0f} };
@@ -436,14 +436,14 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 			// Spriteの描画準備
 			spriteCommon->SettingCommonDraw();
 			// RotSignatureを設定。PSOに設定しているけどベット設定が必要
-			//dxCommon->GetCommandlist()->SetGraphicsRootSignature(rootSignature.Get());
-			//dxCommon->GetCommandlist()->SetPipelineState(graphicsPipelineState.Get());
+			/*			dxCommon->GetCommandlist()->SetGraphicsRootSignature(rootSignature.Get());
+			dxCommon->GetCommandlist()->SetPipelineState(graphicsPipelineState.Get());
 			dxCommon->GetCommandlist()->IASetVertexBuffers(0, 1, &vertexBufferView);
-			//commandList->IASetIndexBuffer(&indexBufferView);
+			commandList->IASetIndexBuffer(&indexBufferView);
 
 
 			// 形状を設定
-			//dxCommon->GetCommandlist()->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+			dxCommon->GetCommandlist()->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 			// マテリアルCBufferの場所を設定
 			dxCommon->GetCommandlist()->SetGraphicsRootConstantBufferView(0, materialResource->GetGPUVirtualAddress());
 			// 平行光源のCBufferの場所を設定
@@ -451,10 +451,11 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 			// wvp用のCBufferの場所を設定
 			dxCommon->GetCommandlist()->SetGraphicsRootConstantBufferView(1, wvpResource->GetGPUVirtualAddress());
 			// SRVのDescriptorTableの先頭を設定
-			//dxCommon->GetCommandlist()->SetGraphicsRootDescriptorTable(2, useMonsterBall ? textureSrvHandleGPU2 : textureSrvHandleGPU);
+			dxCommon->GetCommandlist()->SetGraphicsRootDescriptorTable(2, useMonsterBall ? textureSrvHandleGPU2 : textureSrvHandleGPU);
 			// 描画
-			//commandList->DrawIndexedInstanced(kNumIndices, 1, 0, 0, 0);
-			dxCommon->GetCommandlist()->DrawInstanced(UINT(modelData.vertices.size()), 1, 0, 0);
+		/commandList->DrawIndexedInstanced(kNumIndices, 1, 0, 0, 0);
+			dxCommon->GetCommandlist()->DrawInstanced(UINT(modelData.vertices.size()), 1, 0, 0);*/
+
 
 			// Spriteの描画
 			/*for (Sprite* sprite : sprites) {
