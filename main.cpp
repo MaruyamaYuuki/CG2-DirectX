@@ -154,11 +154,11 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	// テスクチャマネージャの初期化
 	TextureManager::GetInstance()->Initialize(dxCommon);
 	// Textureを読んで転送する
-	TextureManager::GetInstance()->LoadTexture("resources/monsterBall.png");
+	//TextureManager::GetInstance()->LoadTexture("resources/monsterBall.png");
 	TextureManager::GetInstance()->LoadTexture("resources/uvChecker.png");
 
 
-	std::vector<Sprite*> sprites;
+	/*std::vector<Sprite*> sprites;
 	for (uint32_t i = 0; i < 5; ++i) {
 		Sprite* sprite = new Sprite();
 
@@ -177,7 +177,10 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 		sprite->SetPosition(newPosition);
 
 		sprites.push_back(sprite);
-	}
+	}*/
+
+	Sprite* sprite_ = new Sprite();
+	sprite_->Initialize(spriteCommon, "resources/uvChecker.png");
 
 	// WVP用のリソースを作る
 	Microsoft::WRL::ComPtr<ID3D12Resource> wvpResource = dxCommon->CreateBufferResource(sizeof(Sprite::TransformationMatrix));
@@ -335,6 +338,10 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 
 	bool useMonsterBall = true;
 
+	float roation = sprite_->GetRotation();
+
+	bool isRotation = false;
+
 	float num = 0;
 
 	// 出力ウィンドウへの文字出力
@@ -367,9 +374,10 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 			Matrix4x4 worldViewProjectionMatrix = Multiply(wvpData->World, Multiply(viewMatrix, projectionMatrix));
 			wvpData->WVP = worldViewProjectionMatrix;
 
-			for (Sprite* sprite : sprites) {
+			/*for (Sprite* sprite : sprites) {
 				sprite->Update();
-			}
+			}*/
+			sprite_->Update();
 
 			// 開発用UIの処理
 			//ImGui::ShowDemoWindow();
@@ -384,8 +392,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 			ImGui::SliderAngle("CameraRotateX", &cameraTransform.rotate.x);
 			ImGui::SliderAngle("CameraRotateY", &cameraTransform.rotate.y);
 			ImGui::SliderAngle("CameraRotateZ", &cameraTransform.rotate.z);
-
-			ImGui::SliderAngle("SphereRotateX", &transform.rotate.x);
+			/*			ImGui::SliderAngle("SphereRotateX", &transform.rotate.x);
 			ImGui::SliderAngle("SphereRotateY", &transform.rotate.y);
 			ImGui::SliderAngle("SphereRotateZ", &transform.rotate.z);
 
@@ -399,7 +406,10 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 
 			ImGui::DragFloat2("UVTranslate", &uvTransformSprite.translate.x, 0.01f, -10.0f, 10.0f);
 			ImGui::DragFloat2("UVScele", &uvTransformSprite.scale.x, 0.01f, -10.0f, 10.0f);
-			ImGui::SliderAngle("UVRorate", &uvTransformSprite.rotate.z);
+			ImGui::SliderAngle("UVRorate", &uvTransformSprite.rotate.z);*/
+
+
+			ImGui::Checkbox("isRotation", &isRotation);
 
 			ImGui::End();
 
@@ -447,9 +457,10 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 			dxCommon->GetCommandlist()->DrawInstanced(UINT(modelData.vertices.size()), 1, 0, 0);
 
 			// Spriteの描画
-			for (Sprite* sprite : sprites) {
+			/*for (Sprite* sprite : sprites) {
 				sprite->Draw();
-			}
+			}*/
+			sprite_->Draw();
 
 			// 実際のcommandListのImGuiの描画コマンドを積む
 			ImGui_ImplDX12_RenderDrawData(ImGui::GetDrawData(), dxCommon->GetCommandlist());
@@ -464,10 +475,11 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	ImGui::DestroyContext();
 
 	//CloseHandle(fenceEvent);
-	for (Sprite* sprite : sprites) {
+	/*for (Sprite* sprite : sprites) {
 		delete sprite;
 	}
-	sprites.clear();
+	sprites.clear();*/
+	delete sprite_;
 	delete spriteCommon;
 	TextureManager::GetInstance()->Finalize();
 	delete input;

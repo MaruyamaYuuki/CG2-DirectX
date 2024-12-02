@@ -55,4 +55,7 @@ public:
 
 	// テスクチャ番号からGPUハンドルを取得
 	D3D12_GPU_DESCRIPTOR_HANDLE GetSrvHandleGPU(uint32_t textureInex);
+
+	// メタデータを取得
+	const DirectX::TexMetadata& GetMetaData(uint32_t textureIndex);
 };
