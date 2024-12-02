@@ -425,7 +425,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 
 			// Spriteの描画準備
 			spriteCommon->SettingCommonDraw();
-			// RotSignatureを設定。PSOに設定しているけどベット設定が必要
+			/*		// RotSignatureを設定。PSOに設定しているけどベット設定が必要
 			//dxCommon->GetCommandlist()->SetGraphicsRootSignature(rootSignature.Get());
 			//dxCommon->GetCommandlist()->SetPipelineState(graphicsPipelineState.Get());
 			dxCommon->GetCommandlist()->IASetVertexBuffers(0, 1, &vertexBufferView);
@@ -444,7 +444,8 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 			//dxCommon->GetCommandlist()->SetGraphicsRootDescriptorTable(2, useMonsterBall ? textureSrvHandleGPU2 : textureSrvHandleGPU);
 			// 描画
 			//commandList->DrawIndexedInstanced(kNumIndices, 1, 0, 0, 0);
-			dxCommon->GetCommandlist()->DrawInstanced(UINT(modelData.vertices.size()), 1, 0, 0);
+			dxCommon->GetCommandlist()->DrawInstanced(UINT(modelData.vertices.size()), 1, 0, 0);*/
+	
 
 			// Spriteの描画
 			for (Sprite* sprite : sprites) {
