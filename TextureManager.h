@@ -36,7 +36,7 @@ private:
 	static uint32_t kSRVIndexTop;
 public:
 	// 初期化
-	void Initialize();
+	void Initialize(DirectXCommon* dxCommon);
 
 	// シングルトンインスタンスの取得
 	static TextureManager* GetInstance();

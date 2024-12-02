@@ -4,8 +4,9 @@
 TextureManager* TextureManager::instance = nullptr;
 uint32_t TextureManager::kSRVIndexTop = 1;
 
-void TextureManager::Initialize()
+void TextureManager::Initialize(DirectXCommon* dxCommon)
 {
+	dxCommon_ = dxCommon;
 	// SRVの数と同数
 	textureDatas.reserve(DirectXCommon::kMaxSRVCount);
 }
@@ -22,6 +23,8 @@ void TextureManager::Finalize()
 {
 	delete instance;
 	instance = nullptr;
+
+	dxCommon_ = nullptr;
 }
 
 void TextureManager::LoadTexture(const std::string& filePath)
@@ -58,6 +61,9 @@ void TextureManager::LoadTexture(const std::string& filePath)
 	textureData.filePath = filePath;
 	textureData.metadata = mipImages.GetMetadata();
 	textureData.resource = dxCommon_->CreateTextureResource(dxCommon_->GetDevice(), textureData.metadata);
+
+	//テクスチャデータの転送
+	dxCommon_->UploadTextureData(textureData.resource.Get(), mipImages);
 
 	// テクスチャデータの要素数番号をSRVのインデックスとする
 	uint32_t srvIndex = static_cast<uint32_t>(textureDatas.size() - 1) + kSRVIndexTop;
