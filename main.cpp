@@ -1441,7 +1441,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 
 						// Resetボタン
 						if (ImGui::Button(("Reset##" + std::to_string(index)).c_str())) {
-							transforms[index] = { {1.0f, 1.0f, 1.0f}, {0.0f, 0.0f, 0.0f}, {0.0f, 0.0f, 0.0f} };
+							transforms[index] = { {1.0f, 1.0f, 1.0f}, {0.0f, 3.142f, 0.0f}, {0.0f + index, 0.0f + index, 0.0f + index} };
 						}
 
 						// TreeNodeの終了
