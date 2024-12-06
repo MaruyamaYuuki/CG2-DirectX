@@ -3,7 +3,6 @@
 #include <cstdint>
 #include <string>
 #include <format>
-#include <random>
 #include <d3d12.h>
 #include <dxgi1_6.h>
 #include <cassert>
@@ -21,7 +20,6 @@
 #include <wrl.h>
 #define _USE_MATH_DEFINES
 #include <math.h>
-#include <numbers>
 extern IMGUI_IMPL_API LRESULT ImGui_ImplWin32_WndProcHandler(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam);
 
 #pragma comment (lib, "d3d12.lib")
@@ -38,27 +36,6 @@ struct Transform {
 	Vector3 rotate;
 	Vector3 translate;
 };
-struct AABB {
-	Vector3 min; 
-	Vector3 max; 
-};
-struct Particle {
-	Transform transform;
-	Vector3 velocity;
-	Vector4 color;
-	float lifeTime;
-	float currentTime;
-};
-struct Emitter {
-	Transform transfrom;
-	uint32_t count;
-	float frequency;
-	float frequenTime;
-};
-struct AccelerationField {
-	Vector3 acceleration;
-	AABB area;
-};
 struct VertexData {
 	Vector4 position;
 	Vector2 texcoord;
@@ -67,7 +44,6 @@ struct VertexData {
 struct Material {
 	Vector4 color;
 	int32_t enableLighting;
-	float shininess;
 	float padding[3];
 	Matrix4x4 uvTransform;
 };
@@ -79,14 +55,6 @@ struct DirectionalLight {
 	Vector4 color;
 	Vector3 direction;
 	float intensity;
-};
-struct CameraForGPU {
-	Vector3 worldPosition;
-};
-struct ParticleForGPU {
-	Matrix4x4 WVP;
-	Matrix4x4 World;
-	Vector4 color;
 };
 struct MaterialData {
 	std::string textureFilePath;
@@ -470,7 +438,7 @@ Microsoft::WRL::ComPtr<ID3D12DescriptorHeap> CreateDescriptorHeap(
 
 
 
-DirectX::ScratchImage LoadTexture(const std::string& filePath) 
+DirectX::ScratchImage LoadTexture(const std::string& filePath)
 {
 	// テクスチャファイルを読み込んでプログラムで扱えるようにする
 	DirectX::ScratchImage image{};
@@ -631,7 +599,7 @@ ModelData LoadObjFile(const std::string& directoryPath, const std::string& filen
 					elementIndices[element] = std::stoi(index);
 				}
 				// 要素へのIndexから、実際の要素の値を取得して、頂点を構築する
-				Vector4 position = positions[elementIndices [0]- 1];
+				Vector4 position = positions[elementIndices[0] - 1];
 				Vector2 texcoord = texcoords[elementIndices[1] - 1];
 				Vector3 normal = normals[elementIndices[2] - 1];
 				//VertexData vertex = { position,texcoord,normal };
@@ -655,7 +623,7 @@ ModelData LoadObjFile(const std::string& directoryPath, const std::string& filen
 }
 
 struct D3DResourceLeakChecker {
-	~D3DResourceLeakChecker() 
+	~D3DResourceLeakChecker()
 	{
 		// リソースリークチェック
 		Microsoft::WRL::ComPtr<IDXGIDebug1> debug;
@@ -666,50 +634,6 @@ struct D3DResourceLeakChecker {
 		}
 	}
 };
-
-Particle MakeNewParticle(std::mt19937& randomEngine, const Vector3 translate) {
-	std::uniform_real_distribution<float>distribution(-1.0f, 1.0f);
-	Particle particle;
-	particle.transform.scale = { 1.0f,1.0f,1.0f };
-	particle.transform.rotate = { 0.0f,DirectX::XM_PI,0.0f };
-	Vector3 randomTranslate{ distribution(randomEngine),distribution(randomEngine),distribution(randomEngine) };
-	particle.transform.translate.x = translate.x + randomTranslate.x;
-	particle.transform.translate.y = translate.y + randomTranslate.y;
-	particle.transform.translate.z = translate.z + randomTranslate.z;
-	particle.velocity = { distribution(randomEngine),distribution(randomEngine),distribution(randomEngine) };
-	std::uniform_real_distribution<float> distColor(0.0f, 1.0f);
-	particle.color = { distColor(randomEngine),distColor(randomEngine),distColor(randomEngine),1.0f };
-	std::uniform_real_distribution<float> distTime(1.0f, 3.0f);
-	particle.lifeTime = distTime(randomEngine);
-	particle.currentTime = 0;
-	return particle;
-}
-
-std::list<Particle> Emit(const Emitter& emitter, std::mt19937& randomEngine) {
-	std::list<Particle> particles;
-	for (uint32_t count = 0; count < emitter.count; ++count) {
-		particles.push_back(MakeNewParticle(randomEngine, emitter.transfrom.translate));
-	}
-	return particles;
-}
-
-bool IsCollision(const AABB& aabb, const Vector3& point) {
-	// X軸方向の判定
-	if (point.x < aabb.min.x || point.x > aabb.max.x) {
-		return false;
-	}
-	// Y軸方向の判定
-	if (point.y < aabb.min.y || point.y > aabb.max.y) {
-		return false;
-	}
-	// Z軸方向の判定
-	if (point.z < aabb.min.z || point.z > aabb.max.z) {
-		return false;
-	}
-
-	// すべての条件を満たしている場合は衝突している
-	return true;
-}
 
 // Windowsアプリでのエントリーポイント(main関数)
 int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
@@ -960,11 +884,10 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 		D3D12_ROOT_SIGNATURE_FLAG_ALLOW_INPUT_ASSEMBLER_INPUT_LAYOUT;
 
 	// RootParameter作成
-	D3D12_ROOT_PARAMETER rootParameter[5] = {};
+	D3D12_ROOT_PARAMETER rootParameter[4] = {};
 	rootParameter[0].ParameterType = D3D12_ROOT_PARAMETER_TYPE_CBV;
 	rootParameter[0].ShaderVisibility = D3D12_SHADER_VISIBILITY_PIXEL;
 	rootParameter[0].Descriptor.ShaderRegister = 0;
-
 	rootParameter[1].ParameterType = D3D12_ROOT_PARAMETER_TYPE_CBV;
 	rootParameter[1].ShaderVisibility = D3D12_SHADER_VISIBILITY_VERTEX;
 	rootParameter[1].Descriptor.ShaderRegister = 0;
@@ -972,10 +895,6 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	rootParameter[3].ParameterType = D3D12_ROOT_PARAMETER_TYPE_CBV;
 	rootParameter[3].ShaderVisibility = D3D12_SHADER_VISIBILITY_PIXEL;
 	rootParameter[3].Descriptor.ShaderRegister = 1;
-
-	rootParameter[4].ParameterType = D3D12_ROOT_PARAMETER_TYPE_CBV;
-	rootParameter[4].ShaderVisibility = D3D12_SHADER_VISIBILITY_PIXEL;
-	rootParameter[4].Descriptor.ShaderRegister = 2;
 
 	descriptitonRootSignature.pParameters = rootParameter;
 	descriptitonRootSignature.NumParameters = _countof(rootParameter);
@@ -1137,7 +1056,6 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	Vector4 color{ 1.0f,1.0f,1.0f,1.0f };
 	materialData->color = color;
 	materialData->enableLighting = 1;
-	materialData->shininess = 70;
 	materialData->uvTransform = MakeIdentity4x4();
 
 	// マテリアル用のリソースを作る
@@ -1149,7 +1067,6 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	Vector4 modelColor{ 1.0f,1.0f,1.0f,1.0f };
 	materialDataModel->color = modelColor;
 	materialDataModel->enableLighting = 1;
-	materialDataModel->shininess = 70;
 	materialDataModel->uvTransform = MakeIdentity4x4();
 
 	// Sprite用のリソースを作る
@@ -1169,12 +1086,6 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	directionalLightData->color = light.color;
 	directionalLightData->direction = light.direction;
 	directionalLightData->intensity = light.intensity;
-
-	// カメラのリソース
-	Microsoft::WRL::ComPtr<ID3D12Resource> cameraResource = CreateBufferResource(device, sizeof(CameraForGPU));
-	CameraForGPU* cameraData = nullptr;
-	cameraResource->Map(0, nullptr, reinterpret_cast<void**>(&cameraData));
-
 
 	// 頂点リソースを作る
 	float pi = float(M_PI);
@@ -1374,11 +1285,9 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	scissorRect.top = 0;
 	scissorRect.bottom = kClientHeight;
 
-	Transform transform{ {1.0f,1.0f,1.0f},{0.0f,0.0f,0.0f},{-0.8f,0.0f,0.0f} };
+	Transform transform{ {1.0f,1.0f,1.0f},{0.0f,4.6f,0.0f},{-0.8f,0.0f,0.0f} };
 	Transform objTransform{ {1.0f,1.0f,1.0f},{0.0f,3.0f,0.0f},{1.4f,0.0f,0.0f} };
 	Transform cameraTransform{ {1.0f,1.0f,1.0f},{0.0f,0.0f,0.0f},{0.0f,0.0f,-10.0f} };
-
-	cameraData->worldPosition = cameraTransform.translate;
 
 	Transform uvTransformSprite{
 		{1.0f,1.0f,1.0f},
@@ -1460,10 +1369,38 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 				ImGui::Checkbox("Sphere Enable Lighting", reinterpret_cast<bool*>(&materialData->enableLighting));
 			}
 
+			if (ImGui::CollapsingHeader("Model")) {
+				ImGui::DragFloat3("objTranslate", &objTransform.translate.x, 0.01f);
+				ImGui::DragFloat3("objRotate", &objTransform.rotate.x, 0.01f);
+				ImGui::DragFloat3("objScale", &objTransform.scale.x, 0.01f);
+				if (ImGui::Button("Reset")) {
+					objTransform = { {1.0f,1.0f,1.0f},{0.0f,3.0f,0.0f},{1.4f,0.0f,0.0f} };
+				}
+				ImGui::ColorEdit3("objColor", (float*)&objColor);
+				ImGui::Checkbox("Model Enable Lighting", reinterpret_cast<bool*>(&materialDataModel->enableLighting));
+			}
+
+			if (ImGui::CollapsingHeader("Sprite")) {
+				ImGui::DragFloat3("SpriteTranslate", &transformSprite.translate.x, 1.0f);
+				ImGui::DragFloat3("SpriteRotate", &transformSprite.rotate.x, 0.01f);
+				ImGui::DragFloat3("SpriteScale", &transformSprite.scale.x, 0.01f);
+				if (ImGui::Button("Reset")) {
+					transformSprite = { {1.0f,1.0f,1.0f},{0.0f,0.0f,0.0f},{0.0f,0.0f,0.0f} };
+				}
+				ImGui::Checkbox("viewSprite", &viewSprite);
+			}
+			//ImGui::Checkbox("useMonsterBall", &useMonsterBall);
+
 			if (ImGui::CollapsingHeader("Lighting")) {
 				ImGui::ColorEdit3("LightColor", (float*)&lightColor);
 				ImGui::SliderFloat3("LightDirectional", (float*)&lightDirection, -1.0f, 1.0f);
 				ImGui::DragFloat("Intensity", &light.intensity, 0.01f);
+			}
+
+			if (ImGui::CollapsingHeader("UV")) {
+				ImGui::DragFloat2("UVTranslate", &uvTransformSprite.translate.x, 0.01f, -10.0f, 10.0f);
+				ImGui::DragFloat2("UVScele", &uvTransformSprite.scale.x, 0.01f, -10.0f, 10.0f);
+				ImGui::SliderAngle("UVRorate", &uvTransformSprite.rotate.z);
 			}
 
 			ImGui::End();
@@ -1526,8 +1463,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 
 			commandList->IASetIndexBuffer(&indexBufferView);
 
-
-			// 形状を設定
+						// 形状を設定
 			commandList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 			// マテリアルCBufferの場所を設定
 			commandList->SetGraphicsRootConstantBufferView(0, materialResource->GetGPUVirtualAddress());
@@ -1535,21 +1471,19 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 			commandList->SetGraphicsRootConstantBufferView(3, directionalLightResource->GetGPUVirtualAddress());
 			// wvp用のCBufferの場所を設定
 			commandList->SetGraphicsRootConstantBufferView(1, wvpResource->GetGPUVirtualAddress());
-			commandList->SetGraphicsRootConstantBufferView(4, cameraResource->GetGPUVirtualAddress());
 			// SRVのDescriptorTableの先頭を設定
-			commandList->SetGraphicsRootDescriptorTable(2, useMonsterBall ? textureSrvHandleGPU2 : textureSrvHandleGPU);
+			commandList->SetGraphicsRootDescriptorTable(2, textureSrvHandleGPU);
 			// 描画
 			commandList->DrawIndexedInstanced(kNumIndices, 1, 0, 0, 0);
 
-			/*			commandList->IASetVertexBuffers(0, 1, &vertexBufferViewModel);
+            /*
+			commandList->IASetVertexBuffers(0, 1, &vertexBufferViewModel);
 			commandList->SetGraphicsRootConstantBufferView(0, materialResourceModel->GetGPUVirtualAddress());
 			commandList->SetGraphicsRootConstantBufferView(3, directionalLightResource->GetGPUVirtualAddress());
-			commandList->SetGraphicsRootConstantBufferView(1, objResource->GetGPUVirtualAddress());*/
+			commandList->SetGraphicsRootConstantBufferView(1, objResource->GetGPUVirtualAddress());
+			commandList->DrawInstanced(UINT(modelData.vertices.size()), 1, 0, 0);
 
-
-			//->DrawInstanced(UINT(modelData.vertices.size()), 1, 0, 0);
-
-			/*			commandList->SetGraphicsRootDescriptorTable(2, textureSrvHandleGPU);
+			commandList->SetGraphicsRootDescriptorTable(2, textureSrvHandleGPU);
 
 			// Spriteの描画
 			// TransformationMatrixCBufferの場所を設定
@@ -1561,7 +1495,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 
 			// 描画！（DrawCall/ドローコール）6個のインデックスを使用し1つのインスタンスを描画
 			if (viewSprite) {
-				//commandList->DrawIndexedInstanced(6, 1, 0, 0, 0);
+				commandList->DrawIndexedInstanced(6, 1, 0, 0, 0);
 			}*/
 
 
@@ -1577,13 +1511,13 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 			commandList->ResourceBarrier(1, &barrier);
 
 
-			
+
 			// コマンドリストの内容を確定させる。すべてのコマンドを詰んでからCloseする
 			hr = commandList->Close();
 			assert(SUCCEEDED(hr));
 
 			// GPUにコマンドリストの実行を行わせる
-			Microsoft::WRL::ComPtr<ID3D12CommandList> commandLists[] = { commandList.Get()};
+			Microsoft::WRL::ComPtr<ID3D12CommandList> commandLists[] = { commandList.Get() };
 			commandQueue->ExecuteCommandLists(1, commandLists->GetAddressOf());
 			// GPUとosに画面王交換を行うよう通知する
 			swapChain->Present(1, 0);
@@ -1600,7 +1534,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 				// イベントを待つ
 				WaitForSingleObject(fenceEvent, INFINITE);
 			}
-			
+
 			// 次のフレーム用のコマンドリストを準備
 			hr = commandAllocator->Reset();
 			assert(SUCCEEDED(hr));
