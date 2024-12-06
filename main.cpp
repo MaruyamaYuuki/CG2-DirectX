@@ -67,6 +67,7 @@ struct VertexData {
 struct Material {
 	Vector4 color;
 	int32_t enableLighting;
+	float shininess;
 	float padding[3];
 	Matrix4x4 uvTransform;
 };
@@ -1136,6 +1137,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	Vector4 color{ 1.0f,1.0f,1.0f,1.0f };
 	materialData->color = color;
 	materialData->enableLighting = 1;
+	materialData->shininess = 70;
 	materialData->uvTransform = MakeIdentity4x4();
 
 	// マテリアル用のリソースを作る
@@ -1147,6 +1149,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	Vector4 modelColor{ 1.0f,1.0f,1.0f,1.0f };
 	materialDataModel->color = modelColor;
 	materialDataModel->enableLighting = 1;
+	materialDataModel->shininess = 70;
 	materialDataModel->uvTransform = MakeIdentity4x4();
 
 	// Sprite用のリソースを作る
@@ -1167,11 +1170,11 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	directionalLightData->direction = light.direction;
 	directionalLightData->intensity = light.intensity;
 
+	// カメラのリソース
 	Microsoft::WRL::ComPtr<ID3D12Resource> cameraResource = CreateBufferResource(device, sizeof(CameraForGPU));
 	CameraForGPU* cameraData = nullptr;
 	cameraResource->Map(0, nullptr, reinterpret_cast<void**>(&cameraData));
-	CameraForGPU camera{ 1.0f,1.0f,1.0f };
-	cameraData->worldPosition = camera.worldPosition;
+
 
 	// 頂点リソースを作る
 	float pi = float(M_PI);
@@ -1375,6 +1378,8 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	Transform objTransform{ {1.0f,1.0f,1.0f},{0.0f,3.0f,0.0f},{1.4f,0.0f,0.0f} };
 	Transform cameraTransform{ {1.0f,1.0f,1.0f},{0.0f,0.0f,0.0f},{0.0f,0.0f,-10.0f} };
 
+	cameraData->worldPosition = cameraTransform.translate;
+
 	Transform uvTransformSprite{
 		{1.0f,1.0f,1.0f},
 		{0.0f,0.0f,0.0f},
@@ -1530,19 +1535,21 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 			commandList->SetGraphicsRootConstantBufferView(3, directionalLightResource->GetGPUVirtualAddress());
 			// wvp用のCBufferの場所を設定
 			commandList->SetGraphicsRootConstantBufferView(1, wvpResource->GetGPUVirtualAddress());
+			commandList->SetGraphicsRootConstantBufferView(4, cameraResource->GetGPUVirtualAddress());
 			// SRVのDescriptorTableの先頭を設定
 			commandList->SetGraphicsRootDescriptorTable(2, useMonsterBall ? textureSrvHandleGPU2 : textureSrvHandleGPU);
 			// 描画
 			commandList->DrawIndexedInstanced(kNumIndices, 1, 0, 0, 0);
 
-			commandList->IASetVertexBuffers(0, 1, &vertexBufferViewModel);
+			/*			commandList->IASetVertexBuffers(0, 1, &vertexBufferViewModel);
 			commandList->SetGraphicsRootConstantBufferView(0, materialResourceModel->GetGPUVirtualAddress());
 			commandList->SetGraphicsRootConstantBufferView(3, directionalLightResource->GetGPUVirtualAddress());
-			commandList->SetGraphicsRootConstantBufferView(1, objResource->GetGPUVirtualAddress());
-			commandList->SetGraphicsRootConstantBufferView(2, cameraResource->GetGPUVirtualAddress());
+			commandList->SetGraphicsRootConstantBufferView(1, objResource->GetGPUVirtualAddress());*/
+
+
 			//->DrawInstanced(UINT(modelData.vertices.size()), 1, 0, 0);
 
-			commandList->SetGraphicsRootDescriptorTable(2, textureSrvHandleGPU);
+			/*			commandList->SetGraphicsRootDescriptorTable(2, textureSrvHandleGPU);
 
 			// Spriteの描画
 			// TransformationMatrixCBufferの場所を設定
@@ -1555,7 +1562,8 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 			// 描画！（DrawCall/ドローコール）6個のインデックスを使用し1つのインスタンスを描画
 			if (viewSprite) {
 				//commandList->DrawIndexedInstanced(6, 1, 0, 0, 0);
-			}
+			}*/
+
 
 
 			// 実際のcommandListのImGuiの描画コマンドを積む
