@@ -41,11 +41,15 @@ struct VertexData {
 	Vector2 texcoord;
 	Vector3 normal;
 };
+struct CaneraForGPU {
+	Vector3 worldPosition;
+};
 struct Material {
 	Vector4 color;
 	int32_t enableLighting;
 	float padding[3];
 	Matrix4x4 uvTransform;
+	float shininess;
 };
 struct TransformationMatrix {
 	Matrix4x4 WVP;
@@ -884,7 +888,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 		D3D12_ROOT_SIGNATURE_FLAG_ALLOW_INPUT_ASSEMBLER_INPUT_LAYOUT;
 
 	// RootParameter作成
-	D3D12_ROOT_PARAMETER rootParameter[4] = {};
+	D3D12_ROOT_PARAMETER rootParameter[5] = {};
 	rootParameter[0].ParameterType = D3D12_ROOT_PARAMETER_TYPE_CBV;
 	rootParameter[0].ShaderVisibility = D3D12_SHADER_VISIBILITY_PIXEL;
 	rootParameter[0].Descriptor.ShaderRegister = 0;
@@ -895,6 +899,10 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	rootParameter[3].ParameterType = D3D12_ROOT_PARAMETER_TYPE_CBV;
 	rootParameter[3].ShaderVisibility = D3D12_SHADER_VISIBILITY_PIXEL;
 	rootParameter[3].Descriptor.ShaderRegister = 1;
+
+	rootParameter[4].ParameterType = D3D12_ROOT_PARAMETER_TYPE_CBV;
+	rootParameter[4].ShaderVisibility = D3D12_SHADER_VISIBILITY_PIXEL;
+	rootParameter[4].Descriptor.ShaderRegister = 2;
 
 	descriptitonRootSignature.pParameters = rootParameter;
 	descriptitonRootSignature.NumParameters = _countof(rootParameter);
@@ -1057,6 +1065,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	materialData->color = color;
 	materialData->enableLighting = 1;
 	materialData->uvTransform = MakeIdentity4x4();
+	materialData->shininess = 30;
 
 	// マテリアル用のリソースを作る
 	Microsoft::WRL::ComPtr<ID3D12Resource> materialResourceModel = CreateBufferResource(device, sizeof(Material));
@@ -1086,6 +1095,11 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	directionalLightData->color = light.color;
 	directionalLightData->direction = light.direction;
 	directionalLightData->intensity = light.intensity;
+
+	// カメラのリソース
+	Microsoft::WRL::ComPtr<ID3D12Resource> cameraResource = CreateBufferResource(device, sizeof(CaneraForGPU));
+	CaneraForGPU* cameraData = nullptr;
+	cameraResource->Map(0, nullptr, reinterpret_cast<void**>(&cameraData));
 
 	// 頂点リソースを作る
 	float pi = float(M_PI);
@@ -1288,7 +1302,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	Transform transform{ {1.0f,1.0f,1.0f},{0.0f,4.6f,0.0f},{-0.8f,0.0f,0.0f} };
 	Transform objTransform{ {1.0f,1.0f,1.0f},{0.0f,3.0f,0.0f},{1.4f,0.0f,0.0f} };
 	Transform cameraTransform{ {1.0f,1.0f,1.0f},{0.0f,0.0f,0.0f},{0.0f,0.0f,-10.0f} };
-
+	cameraData->worldPosition = cameraTransform.translate;
 	Transform uvTransformSprite{
 		{1.0f,1.0f,1.0f},
 		{0.0f,0.0f,0.0f},
@@ -1471,6 +1485,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 			commandList->SetGraphicsRootConstantBufferView(3, directionalLightResource->GetGPUVirtualAddress());
 			// wvp用のCBufferの場所を設定
 			commandList->SetGraphicsRootConstantBufferView(1, wvpResource->GetGPUVirtualAddress());
+			commandList->SetGraphicsRootConstantBufferView(4, cameraResource->GetGPUVirtualAddress());
 			// SRVのDescriptorTableの先頭を設定
 			commandList->SetGraphicsRootDescriptorTable(2, textureSrvHandleGPU);
 			// 描画
