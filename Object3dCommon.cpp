@@ -1,13 +1,13 @@
 #include "Object3dCommon.h"
 
-void ObJect3dCommon::Initialize(DirectXCommon* dxCommon)
+void Object3dCommon::Initialize(DirectXCommon* dxCommon)
 {
 	dxCommon_ = dxCommon;
 
 	GeneratePipeline();
 }
 
-void ObJect3dCommon::SettingCommonDraw()
+void Object3dCommon::SettingCommonDraw()
 {
 	// RotSignatureを設定。PSOに設定しているけどベット設定が必要
 	dxCommon_->GetCommandlist()->SetGraphicsRootSignature(rootSignature.Get());
@@ -16,7 +16,7 @@ void ObJect3dCommon::SettingCommonDraw()
 	dxCommon_->GetCommandlist()->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 }
 
-void ObJect3dCommon::createRootSignature()
+void Object3dCommon::createRootSignature()
 {
 	// RootSignature作成
 	D3D12_ROOT_SIGNATURE_DESC descriptitonRootSignature{};
@@ -81,7 +81,7 @@ void ObJect3dCommon::createRootSignature()
 	assert(SUCCEEDED(hr));
 }
 
-void ObJect3dCommon::GeneratePipeline()
+void Object3dCommon::GeneratePipeline()
 {
 	createRootSignature();
 
