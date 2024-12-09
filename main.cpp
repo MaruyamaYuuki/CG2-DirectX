@@ -186,7 +186,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 
 	ObJect3dCommon* object3dCommon = nullptr;
 	object3dCommon = new ObJect3dCommon;
-	object3dCommon->Initialize();
+	object3dCommon->Initialize(dxCommon);
 
 	Object3d* object3d = new Object3d;
 	object3d->Initialize();
@@ -441,6 +441,9 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 
 
 			dxCommon->PreDraw();
+
+			// 3Dオブジェクトの描画準備
+			object3dCommon->SettingCommonDraw();
 
 			// Spriteの描画準備
 			spriteCommon->SettingCommonDraw();
