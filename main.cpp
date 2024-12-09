@@ -13,6 +13,8 @@
 #include "Sprite.h"
 #include "SpriteCommon.h"
 #include "TextureManager.h"
+#include "Object3dCommon.h"
+#include "Object3d.h"
 
 #pragma comment (lib, "dxcompiler.lib")
 
@@ -181,6 +183,13 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 
 	Sprite* sprite_ = new Sprite();
 	sprite_->Initialize(spriteCommon, "resources/uvChecker.png");
+
+	ObJect3dCommon* object3dCommon = nullptr;
+	object3dCommon = new ObJect3dCommon;
+	object3dCommon->Initialize();
+
+	Object3d* object3d = new Object3d;
+	object3d->Initialize();
 
 	// WVP用のリソースを作る
 	Microsoft::WRL::ComPtr<ID3D12Resource> wvpResource = dxCommon->CreateBufferResource(sizeof(Sprite::TransformationMatrix));
@@ -474,6 +483,8 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	ImGui_ImplWin32_Shutdown();
 	ImGui::DestroyContext();
 
+	delete object3d;
+	delete object3dCommon;
 	//CloseHandle(fenceEvent);
 	/*for (Sprite* sprite : sprites) {
 		delete sprite;
