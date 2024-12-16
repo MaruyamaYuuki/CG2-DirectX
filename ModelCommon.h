@@ -1,6 +1,5 @@
 #pragma once
-
-class DirectXCommon;
+#include "DirectXCommon.h"
 
 // 3Dモデル共通部
 class ModelCommon {

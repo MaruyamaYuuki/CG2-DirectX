@@ -10,6 +10,8 @@
 #include "TextureManager.h"
 #include "Object3dCommon.h"
 #include "Object3d.h"
+#include "ModelCommon.h"
+#include "Model.h"
 
 #pragma comment (lib, "dxcompiler.lib")
 
@@ -65,22 +67,32 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	Sprite* sprite_ = new Sprite();
 	sprite_->Initialize(spriteCommon, "resources/uvChecker.png");
 
+	ModelCommon* modelCommon = nullptr;
+	modelCommon = new ModelCommon;
+	modelCommon->Initialize(dxCommon);
+
+	Model* model = nullptr;
+	model = new Model;
+	model->Initialize(modelCommon);
+
 	Object3dCommon* object3dCommon = nullptr;
 	object3dCommon = new Object3dCommon;
 	object3dCommon->Initialize(dxCommon);
 
-	Object3d* object3d = new Object3d;
+	/*	Object3d* object3d = new Object3d;
 	object3d->Initialize(object3dCommon);
+	object3d->SetModel(model);*/
 
-	// WVP用のリソースを作る
-	Microsoft::WRL::ComPtr<ID3D12Resource> wvpResource = dxCommon->CreateBufferResource(sizeof(Sprite::TransformationMatrix));
-	// データを書き込む
-	Sprite::TransformationMatrix* wvpData = nullptr;
-	// 書き込むためのアドレスを取得
-	wvpResource->Map(0, nullptr, reinterpret_cast<void**>(&wvpData));
-	// 単位行列を書き込んでおく
-	wvpData->WVP = MakeIdentity4x4();
-	wvpData->World = MakeIdentity4x4();
+
+	std::vector<Object3d*> object3dList;
+
+	for (int i = 0; i < 2; ++i) { // 5つのオブジェクトを生成
+		Object3d* object3d = new Object3d;
+		object3d->Initialize(object3dCommon);
+		object3d->SetModel(model);
+		object3d->SetTranslate(Vector3(float(i * 3), 0.0f, 0.0f));
+		object3dList.push_back(object3d);
+	}
 
     /*// 頂点リソースを作る
 	float pi = float(M_PI);
@@ -199,7 +211,20 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 		    ImGui::NewFrame();
 
 			// ゲーム処理
-			object3d->Updata();
+			//object3d->Updata();
+
+			Vector3 currentRotate[2];
+			for (int i = 0; i < object3dList.size(); ++i) {
+
+				currentRotate[i] = object3dList[i]->GetRotate();
+				currentRotate[0].z += 0.05f;
+				currentRotate[1].y += 0.05f;
+
+				object3dList[i]->SetRotate(currentRotate[i]);
+
+				// 更新処理
+				object3dList[i]->Updata();
+			}
 
 			/*for (Sprite* sprite : sprites) {
 				sprite->Update();
@@ -250,15 +275,10 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 
 			// 3Dオブジェクトの描画準備
 			object3dCommon->SettingCommonDraw();
-			object3d->Draw();
-
-
-			// RotSignatureを設定。PSOに設定しているけどベット設定が必要
-			//dxCommon->GetCommandlist()->SetGraphicsRootSignature(rootSignature.Get());
-			//dxCommon->GetCommandlist()->SetPipelineState(graphicsPipelineState.Get());
-			//dxCommon->GetCommandlist()->IASetVertexBuffers(0, 1, &vertexBufferView);
-			//commandList->IASetIndexBuffer(&indexBufferView);
-
+			//object3d->Draw();
+			for (Object3d* object3d : object3dList) {
+				object3d->Draw();
+			}
 
 			// Spriteの描画準備
 			spriteCommon->SettingCommonDraw();
@@ -280,8 +300,14 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	ImGui_ImplWin32_Shutdown();
 	ImGui::DestroyContext();
 
-	delete object3d;
+	for (Object3d* object3d : object3dList) {
+		delete object3d;
+	}
+	object3dList.clear();
+	//delete object3d;
 	delete object3dCommon;
+	delete model;
+	delete modelCommon;
 	//CloseHandle(fenceEvent);
 	/*for (Sprite* sprite : sprites) {
 		delete sprite;
