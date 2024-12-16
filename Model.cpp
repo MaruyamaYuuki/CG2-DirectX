@@ -3,12 +3,12 @@
 #include "TextureManager.h"
 #include <cassert>
 
-void Model::Initialize(ModelCommon* modelCommon)
+void Model::Initialize(ModelCommon* modelCommon, const std::string& directorypath, const std::string& filename)
 {
 	this->modelCommon = modelCommon;
 
 	// モデル読み込み
-	modelData = LoadObjFile("resources", "plane.obj");
+	modelData = LoadObjFile(directorypath, filename);
 
 	// 頂点リソースを作る
 	vertexResource = modelCommon->GetDxCommon()->CreateBufferResource(sizeof(VertexData) * modelData.vertices.size());

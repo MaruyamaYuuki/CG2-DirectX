@@ -73,7 +73,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 
 	Model* model = nullptr;
 	model = new Model;
-	model->Initialize(modelCommon);
+	model->Initialize(modelCommon, "resources", "plane.obj");
 
 	Object3dCommon* object3dCommon = nullptr;
 	object3dCommon = new Object3dCommon;
