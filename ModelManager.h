@@ -30,16 +30,16 @@ public:
 	// 初期化
 	void Initialize(DirectXCommon* dxCommon);
 
-    ///  <summary>{
-    ///  モデルふぁおちの読み込み
-    /// </summary>
+	///  <summary>{
+	///  モデルファイルの読み込み
+	/// </summary>
 	//<param name="filepath">モデルファイルのパス</param>
 	void LoadModel(const std::string& filePath);
 
-    /// <summary>
-    /// モデルの検索
-    /// </summary>
-	/// <prama name="filePath">モデルファイルのパス</param>
+	/// <summary>
+	/// モデルの検索
+	/// </summary>
+	/// <param name="filePath">モデルファイルのパス</param>
 	/// <return>モデル</return>
 	Model* FindModel(const std::string& filePath);
 
@@ -48,4 +48,4 @@ private:
 	std::map<std::string, std::unique_ptr<Model>> models;
 
 	ModelCommon* modelCommon = nullptr;
-}
+};

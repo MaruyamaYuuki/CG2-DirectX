@@ -6,7 +6,7 @@ ModelManager* ModelManager::instance = nullptr;
 
 ModelManager* ModelManager::GetInstance()
 {
-	if (instance == nullptr) {
+	if (!instance) {
 		instance = new ModelManager;
 	}
 	return instance;
@@ -32,7 +32,7 @@ void ModelManager::LoadModel(const std::string& filePath)
 	}
 
 	std::unique_ptr<Model> model = std::make_unique<Model>();
-	model->Initialize(modelCommon, "respurces", filePath);
+	model->Initialize(modelCommon, "resources", filePath);
 
 	// モデルをmapコンテナに格納する
 	models.insert(std::make_pair(filePath, std::move(model)));

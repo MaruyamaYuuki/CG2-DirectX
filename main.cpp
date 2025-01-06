@@ -12,6 +12,7 @@
 #include "Object3d.h"
 #include "ModelCommon.h"
 #include "Model.h"
+#include "ModelManager.h"
 
 #pragma comment (lib, "dxcompiler.lib")
 
@@ -42,28 +43,6 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	//TextureManager::GetInstance()->LoadTexture("resources/monsterBall.png");
 	TextureManager::GetInstance()->LoadTexture("resources/uvChecker.png");
 
-
-	/*std::vector<Sprite*> sprites;
-	for (uint32_t i = 0; i < 5; ++i) {
-		Sprite* sprite = new Sprite();
-
-		std::string filePath;
-		if (i % 2 == 0) {
-			filePath = "resources/uvChecker.png";
-		}
-		else {
-			filePath = "resources/monsterBall.png";
-		}
-		sprite->Initialize(spriteCommon, filePath);
-
-
-		// 各スプライトに異なる位置を設定
-		Vector2 newPosition = {float(i * 200), 0 };
-		sprite->SetPosition(newPosition);
-
-		sprites.push_back(sprite);
-	}*/
-
 	Sprite* sprite_ = new Sprite();
 	sprite_->Initialize(spriteCommon, "resources/uvChecker.png");
 
@@ -79,20 +58,23 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	object3dCommon = new Object3dCommon;
 	object3dCommon->Initialize(dxCommon);
 
-	/*	Object3d* object3d = new Object3d;
-	object3d->Initialize(object3dCommon);
-	object3d->SetModel(model);*/
+	ModelManager::GetInstance()->Initialize(dxCommon);
 
+	// .ojbファイルからモデルを読み込む
+	ModelManager::GetInstance()->LoadModel("plane.obj");
+	ModelManager::GetInstance()->LoadModel("axis.obj");
 
-	std::vector<Object3d*> object3dList;
+	// 異なるモデルを持つオブジェクトを生成
+	Object3d* planeObject = new Object3d;
+	planeObject->Initialize(object3dCommon);
+	planeObject->SetModel("plane.obj");
+	planeObject->SetTranslate(Vector3(-2.0f, 0.0f, 0.0f));
 
-	for (int i = 0; i < 2; ++i) { // 5つのオブジェクトを生成
-		Object3d* object3d = new Object3d;
-		object3d->Initialize(object3dCommon);
-		//object3d->SetModel(model);
-		object3d->SetTranslate(Vector3(float(i * 3), 0.0f, 0.0f));
-		object3dList.push_back(object3d);
-	}
+	Object3d* axisObject = new Object3d;
+	axisObject->Initialize(object3dCommon);
+	axisObject->SetModel("axis.obj");
+	axisObject->SetTranslate(Vector3(2.0f, 0.0f, 0.0f));
+
 
     /*// 頂点リソースを作る
 	float pi = float(M_PI);
@@ -168,9 +150,6 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	}*/
 
 
-
-
-	
 	Sprite::Transform transform{ {1.0f,1.0f,1.0f},{0.0f,0.0f,0.0f},{0.0f,0.0f,0.0f} };
 	Sprite::Transform cameraTransform{ {1.0f,1.0f,1.0f},{0.0f,0.0f,0.0f},{0.0f,0.0f,-10.0f} };
 
@@ -211,24 +190,19 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 		    ImGui::NewFrame();
 
 			// ゲーム処理
-			//object3d->Updata();
-
 			Vector3 currentRotate[2];
-			for (int i = 0; i < object3dList.size(); ++i) {
+			currentRotate[0] = planeObject->GetRotate();
+			currentRotate[1] = axisObject->GetRotate();
 
-				currentRotate[i] = object3dList[i]->GetRotate();
-				currentRotate[0].z += 0.05f;
-				currentRotate[1].y += 0.05f;
+			currentRotate[0].y += 0.05f;
+			currentRotate[1].y = 0.0f;
+			currentRotate[1].z += 0.05f;
 
-				object3dList[i]->SetRotate(currentRotate[i]);
+			planeObject->SetRotate(currentRotate[0]);
+			planeObject->Updata();
+			axisObject->SetRotate(currentRotate[1]);
+			axisObject->Updata();
 
-				// 更新処理
-				object3dList[i]->Updata();
-			}
-
-			/*for (Sprite* sprite : sprites) {
-				sprite->Update();
-			}*/
 			sprite_->Update();
 
 			// 開発用UIの処理
@@ -275,17 +249,11 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 
 			// 3Dオブジェクトの描画準備
 			object3dCommon->SettingCommonDraw();
-			//object3d->Draw();
-			for (Object3d* object3d : object3dList) {
-				object3d->Draw();
-			}
+			planeObject->Draw();
+			axisObject->Draw();
 
 			// Spriteの描画準備
 			spriteCommon->SettingCommonDraw();
-			// Spriteの描画
-			/*for (Sprite* sprite : sprites) {
-				sprite->Draw();
-			}*/
 			sprite_->Draw();
 
 			// 実際のcommandListのImGuiの描画コマンドを積む
@@ -300,19 +268,12 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	ImGui_ImplWin32_Shutdown();
 	ImGui::DestroyContext();
 
-	for (Object3d* object3d : object3dList) {
-		delete object3d;
-	}
-	object3dList.clear();
-	//delete object3d;
+	delete axisObject;
+	delete planeObject;
+	ModelManager::GetInstance()->Finalize();
 	delete object3dCommon;
 	delete model;
 	delete modelCommon;
-	//CloseHandle(fenceEvent);
-	/*for (Sprite* sprite : sprites) {
-		delete sprite;
-	}
-	sprites.clear();*/
 	delete sprite_;
 	delete spriteCommon;
 	TextureManager::GetInstance()->Finalize();
