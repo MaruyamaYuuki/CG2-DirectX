@@ -89,7 +89,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	for (int i = 0; i < 2; ++i) { // 5つのオブジェクトを生成
 		Object3d* object3d = new Object3d;
 		object3d->Initialize(object3dCommon);
-		object3d->SetModel(model);
+		//object3d->SetModel(model);
 		object3d->SetTranslate(Vector3(float(i * 3), 0.0f, 0.0f));
 		object3dList.push_back(object3d);
 	}

@@ -32,7 +32,7 @@ void ModelManager::LoadModel(const std::string& filePath)
 	}
 
 	std::unique_ptr<Model> model = std::make_unique<Model>();
-	model->Initialize(modelCommon, "respurce", filePath);
+	model->Initialize(modelCommon, "respurces", filePath);
 
 	// モデルをmapコンテナに格納する
 	models.insert(std::make_pair(filePath, std::move(model)));

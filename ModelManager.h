@@ -18,8 +18,8 @@ private:
 
 	ModelManager() = default;
 	~ModelManager() = default;
-	ModelManager(const ModelManager&);
-	ModelManager& operator=(const ModelManager& other);
+	ModelManager(const ModelManager&) = delete;
+	ModelManager& operator=(const ModelManager& other) = delete;
 
 public:
 	// シングルトンインスタンスの取得
