@@ -31,18 +31,6 @@
     <Filter Include="ソース ファイル\math">
       <UniqueIdentifier>{50cc3201-6a36-4fc4-b7c3-fedbc0e11e1f}</UniqueIdentifier>
     </Filter>
-    <Filter Include="ヘッダー ファイル\2d">
-      <UniqueIdentifier>{b846d579-d0a8-4905-8014-4a3f1ddcb4ff}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="ヘッダー ファイル\3d">
-      <UniqueIdentifier>{e38c9939-8365-488c-ab63-9d7ffa871eed}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="ヘッダー ファイル\base">
-      <UniqueIdentifier>{f1b67a55-cf0c-4f64-9e6d-f0de555daa8a}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="ヘッダー ファイル\math">
-      <UniqueIdentifier>{b0978efe-0a47-47e0-a58d-d6744383dac8}</UniqueIdentifier>
-    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="main.cpp">
@@ -141,52 +129,52 @@
       <Filter>imgui</Filter>
     </ClInclude>
     <ClInclude Include="Sprite.h">
-      <Filter>ヘッダー ファイル\2d</Filter>
+      <Filter>ソース ファイル\2d</Filter>
     </ClInclude>
     <ClInclude Include="SpriteCommon.h">
-      <Filter>ヘッダー ファイル\2d</Filter>
+      <Filter>ソース ファイル\2d</Filter>
     </ClInclude>
     <ClInclude Include="Model.h">
-      <Filter>ヘッダー ファイル\3d</Filter>
+      <Filter>ソース ファイル\3d</Filter>
     </ClInclude>
     <ClInclude Include="ModelCommon.h">
-      <Filter>ヘッダー ファイル\3d</Filter>
+      <Filter>ソース ファイル\3d</Filter>
     </ClInclude>
     <ClInclude Include="ModelManager.h">
-      <Filter>ヘッダー ファイル\3d</Filter>
+      <Filter>ソース ファイル\3d</Filter>
     </ClInclude>
     <ClInclude Include="Object3d.h">
-      <Filter>ヘッダー ファイル\3d</Filter>
+      <Filter>ソース ファイル\3d</Filter>
     </ClInclude>
     <ClInclude Include="Object3dCommon.h">
-      <Filter>ヘッダー ファイル\3d</Filter>
+      <Filter>ソース ファイル\3d</Filter>
     </ClInclude>
     <ClInclude Include="D3DResourceLeakChecker.h">
-      <Filter>ヘッダー ファイル\base</Filter>
+      <Filter>ソース ファイル\base</Filter>
     </ClInclude>
     <ClInclude Include="DirectXCommon.h">
-      <Filter>ヘッダー ファイル\base</Filter>
+      <Filter>ソース ファイル\base</Filter>
     </ClInclude>
     <ClInclude Include="Input.h">
-      <Filter>ヘッダー ファイル\base</Filter>
+      <Filter>ソース ファイル\base</Filter>
     </ClInclude>
     <ClInclude Include="Logger.h">
-      <Filter>ヘッダー ファイル\base</Filter>
+      <Filter>ソース ファイル\base</Filter>
     </ClInclude>
     <ClInclude Include="ResourceObject.h">
-      <Filter>ヘッダー ファイル\base</Filter>
+      <Filter>ソース ファイル\base</Filter>
     </ClInclude>
     <ClInclude Include="StringUtility.h">
-      <Filter>ヘッダー ファイル\base</Filter>
+      <Filter>ソース ファイル\base</Filter>
     </ClInclude>
     <ClInclude Include="TextureManager.h">
-      <Filter>ヘッダー ファイル\base</Filter>
+      <Filter>ソース ファイル\base</Filter>
     </ClInclude>
     <ClInclude Include="WinApp.h">
-      <Filter>ヘッダー ファイル\base</Filter>
+      <Filter>ソース ファイル\base</Filter>
     </ClInclude>
     <ClInclude Include="MathFunctions.h">
-      <Filter>ヘッダー ファイル\math</Filter>
+      <Filter>ソース ファイル\math</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
