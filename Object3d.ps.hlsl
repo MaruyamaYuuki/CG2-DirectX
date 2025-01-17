@@ -25,7 +25,7 @@ ConstantBuffer<Camera> gCamera : register(b2);
 struct PointLight
 {
     float32_t4 color;
-    float32_t4 position;
+    float32_t3 position;
     float intensity;
 };
 ConstantBuffer<PointLight> gPointLight : register(b3);
@@ -51,12 +51,20 @@ PixelShaderOutput main(VertexShaderOutput input)
         float NdotL = dot(normalize(input.normal), -gDirectionalLight.direction);
         float cos = pow(NdotL * 0.5f + 0.5f, 2.0f);
         // 拡散反射
-        float32_t3 diffuse =
+        float32_t3 diffuseDirection =
         gMaterial.color.rgb * textureColor.rgb * gDirectionalLight.color.rgb * cos * gDirectionalLight.intensity;
+        
+        float32_t3 diffusePoint =
+        gMaterial.color.rgb * textureColor.rgb * gPointLight.color.rgb * cos * gPointLight.intensity;
         // 鏡面反射
-        float32_t3 specular =
+        float32_t3 specularDirection =
         gDirectionalLight.color.rgb * gDirectionalLight.intensity * specularPow * float32_t3(1.0f, 1.0f, 1.0f);
-        output.color.rgb = diffuse + specular;
+        
+        float32_t3 specularPoint =
+        gPointLight.color.rgb * gPointLight.intensity * specularPow * float32_t3(1.0f, 1.0f, 1.0f);
+        
+        float32_t3 pointLightDrection=normalize(input.worldPosition-gPointLight.position);
+        output.color.rgb = diffuseDirection + specularDirection + diffusePoint + specularPoint;
         output.color.a = gMaterial.color.a * textureColor.a;
     }
     else
