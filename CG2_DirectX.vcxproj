@@ -11,8 +11,8 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="D3DResourceLeakchecker.cpp" />
-    <ClCompile Include="DirectXCommon.cpp" />
+    <ClCompile Include="myEngine\base\D3DResourceLeakchecker.cpp" />
+    <ClCompile Include="myEngine\base\DirectXCommon.cpp" />
     <ClCompile Include="externals\imgui\imgui.cpp" />
     <ClCompile Include="externals\imgui\imgui_demo.cpp" />
     <ClCompile Include="externals\imgui\imgui_draw.cpp" />
@@ -20,24 +20,24 @@
     <ClCompile Include="externals\imgui\imgui_impl_win32.cpp" />
     <ClCompile Include="externals\imgui\imgui_tables.cpp" />
     <ClCompile Include="externals\imgui\imgui_widgets.cpp" />
-    <ClCompile Include="Input.cpp" />
-    <ClCompile Include="Logger.cpp" />
+    <ClCompile Include="myEngine\base\Input.cpp" />
+    <ClCompile Include="myEngine\base\Logger.cpp" />
     <ClCompile Include="main.cpp" />
-    <ClCompile Include="MathFunctions.cpp" />
-    <ClCompile Include="Model.cpp" />
-    <ClCompile Include="ModelCommon.cpp" />
-    <ClCompile Include="ModelManager.cpp" />
-    <ClCompile Include="Object3d.cpp" />
-    <ClCompile Include="Object3dCommon.cpp" />
-    <ClCompile Include="Sprite.cpp" />
-    <ClCompile Include="SpriteCommon.cpp" />
-    <ClCompile Include="StringUtility.cpp" />
-    <ClCompile Include="TextureManager.cpp" />
-    <ClCompile Include="WinApp.cpp" />
+    <ClCompile Include="myEngine\math\MathFunctions.cpp" />
+    <ClCompile Include="myEngine\3d\Model.cpp" />
+    <ClCompile Include="myEngine\3d\ModelCommon.cpp" />
+    <ClCompile Include="myEngine\3d\ModelManager.cpp" />
+    <ClCompile Include="myEngine\3d\Object3d.cpp" />
+    <ClCompile Include="myEngine\3d\Object3dCommon.cpp" />
+    <ClCompile Include="myEngine\2d\Sprite.cpp" />
+    <ClCompile Include="myEngine\2d\SpriteCommon.cpp" />
+    <ClCompile Include="myEngine\base\StringUtility.cpp" />
+    <ClCompile Include="myEngine\base\TextureManager.cpp" />
+    <ClCompile Include="myEngine\base\WinApp.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="D3DResourceLeakChecker.h" />
-    <ClInclude Include="DirectXCommon.h" />
+    <ClInclude Include="myEngine\base\D3DResourceLeakChecker.h" />
+    <ClInclude Include="myEngine\base\DirectXCommon.h" />
     <ClInclude Include="externals\imgui\imconfig.h" />
     <ClInclude Include="externals\imgui\imgui.h" />
     <ClInclude Include="externals\imgui\imgui_impl_dx12.h" />
@@ -46,20 +46,20 @@
     <ClInclude Include="externals\imgui\imstb_rectpack.h" />
     <ClInclude Include="externals\imgui\imstb_textedit.h" />
     <ClInclude Include="externals\imgui\imstb_truetype.h" />
-    <ClInclude Include="Input.h" />
-    <ClInclude Include="Logger.h" />
-    <ClInclude Include="MathFunctions.h" />
-    <ClInclude Include="Model.h" />
-    <ClInclude Include="ModelCommon.h" />
-    <ClInclude Include="ModelManager.h" />
-    <ClInclude Include="Object3d.h" />
-    <ClInclude Include="Object3dCommon.h" />
-    <ClInclude Include="ResourceObject.h" />
-    <ClInclude Include="Sprite.h" />
-    <ClInclude Include="SpriteCommon.h" />
-    <ClInclude Include="StringUtility.h" />
-    <ClInclude Include="TextureManager.h" />
-    <ClInclude Include="WinApp.h" />
+    <ClInclude Include="myEngine\base\Input.h" />
+    <ClInclude Include="myEngine\base\Logger.h" />
+    <ClInclude Include="myEngine\math\MathFunctions.h" />
+    <ClInclude Include="myEngine\3d\Model.h" />
+    <ClInclude Include="myEngine\3d\ModelCommon.h" />
+    <ClInclude Include="myEngine\3d\ModelManager.h" />
+    <ClInclude Include="myEngine\3d\Object3d.h" />
+    <ClInclude Include="myEngine\3d\Object3dCommon.h" />
+    <ClInclude Include="myEngine\base\ResourceObject.h" />
+    <ClInclude Include="myEngine\2d\Sprite.h" />
+    <ClInclude Include="myEngine\2d\SpriteCommon.h" />
+    <ClInclude Include="myEngine\base\StringUtility.h" />
+    <ClInclude Include="myEngine\base\TextureManager.h" />
+    <ClInclude Include="myEngine\base\WinApp.h" />
   </ItemGroup>
   <ItemGroup>
     <Text Include="externals\imgui\LICENSE.txt" />
@@ -132,6 +132,7 @@
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
       <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
       <TreatWarningAsError>true</TreatWarningAsError>
+      <AdditionalIncludeDirectories>$(ProjectDir);$(ProjectDir)myEngine\base;$(ProjectDir)myEngine\2d;$(ProjectDir)myEngine\3d;$(ProjectDir)myEngine\math;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -154,6 +155,7 @@ copy "$(WindowsSdkDir)bin\$(TargetPlatformVersion)\x64\dxil.dll" "$(TargetDir)dx
       <ConformanceMode>true</ConformanceMode>
       <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
       <LanguageStandard>stdcpp20</LanguageStandard>
+      <AdditionalIncludeDirectories>$(ProjectDir);$(ProjectDir)myEngine\base;$(ProjectDir)myEngine\2d;$(ProjectDir)myEngine\3d;$(ProjectDir)myEngine\math;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
