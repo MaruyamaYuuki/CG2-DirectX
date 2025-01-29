@@ -11,6 +11,7 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="CopyMoveTimer.cpp" />
     <ClCompile Include="myEngine\base\D3DResourceLeakchecker.cpp" />
     <ClCompile Include="myEngine\base\DirectXCommon.cpp" />
     <ClCompile Include="externals\imgui\imgui.cpp" />
@@ -36,6 +37,7 @@
     <ClCompile Include="myEngine\base\WinApp.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="CopyMoveTimer.h" />
     <ClInclude Include="myEngine\base\D3DResourceLeakChecker.h" />
     <ClInclude Include="myEngine\base\DirectXCommon.h" />
     <ClInclude Include="externals\imgui\imconfig.h" />

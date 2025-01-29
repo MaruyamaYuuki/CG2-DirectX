@@ -13,6 +13,7 @@
 #include "ModelCommon.h"
 #include "Model.h"
 #include "ModelManager.h"
+#include "CopyMoveTimer.h"
 
 #pragma comment (lib, "dxcompiler.lib")
 
@@ -74,6 +75,13 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	axisObject->Initialize(object3dCommon);
 	axisObject->SetModel("axis.obj");
 	axisObject->SetTranslate(Vector3(2.0f, 0.0f, 0.0f));
+
+	CopyMoveTimer* copyMoveTimer_ = new CopyMoveTimer();
+	copyMoveTimer_->Initialize(winApp, dxCommon);
+
+
+	std::string testStr(10000, 'a'); // 10,000文字の文字列を作成
+
 
 
     /*// 頂点リソースを作る
@@ -182,7 +190,9 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 			
 			input->Update();
 			if (input->TriggerKey(DIK_0)){
-				OutputDebugStringA("Hit 0\n");
+    			OutputDebugStringA("Comparing 10,000 characters by moving and copying\n");
+		    	CopyMoveTimer::CopyTime(testStr);
+		    	CopyMoveTimer::MoveTime(std::move(testStr));
 			}
 			
 		    ImGui_ImplDX12_NewFrame();
@@ -204,6 +214,8 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 			axisObject->Updata();
 
 			sprite_->Update();
+
+
 
 			// 開発用UIの処理
 			//ImGui::ShowDemoWindow();
