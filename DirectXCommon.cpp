@@ -8,7 +8,6 @@ using namespace Microsoft::WRL;
 DirectXCommon::~DirectXCommon() {
 	if (fenceEvent) {
 		CloseHandle(fenceEvent);
-		fenceEvent = nullptr;
 	}
 }
 
