@@ -9,6 +9,8 @@ DirectXCommon::~DirectXCommon() {
 	if (fenceEvent) {
 		CloseHandle(fenceEvent);
 	}
+	winApp->Finalize();
+	delete winApp;
 }
 
 void DirectXCommon::Initialize(WinApp* winApp)
