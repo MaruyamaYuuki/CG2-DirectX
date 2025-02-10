@@ -10,6 +10,10 @@ DirectXCommon::~DirectXCommon() {
 		CloseHandle(fenceEvent);
 	}
 	winApp->Finalize();
+
+	ImGui_ImplDX12_Shutdown();
+	ImGui_ImplWin32_Shutdown();
+	ImGui::DestroyContext();
 }
 
 void DirectXCommon::Initialize(WinApp* winApp)
