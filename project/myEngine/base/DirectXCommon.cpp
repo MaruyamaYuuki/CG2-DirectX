@@ -7,6 +7,17 @@ using namespace Microsoft::WRL;
 
 const uint32_t DirectXCommon::kMaxSRVCount = 512;
 
+DirectXCommon::~DirectXCommon() {
+	if (fenceEvent) {
+		CloseHandle(fenceEvent);
+	}
+	winApp->Finalize();
+
+	ImGui_ImplDX12_Shutdown();
+	ImGui_ImplWin32_Shutdown();
+	ImGui::DestroyContext();
+}
+
 void DirectXCommon::Initialize(WinApp* winApp)
 {
 	// FPS固定初期化

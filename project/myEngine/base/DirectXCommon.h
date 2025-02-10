@@ -22,6 +22,8 @@
 // DirectX基盤
 class DirectXCommon {
 public:
+	~DirectXCommon();
+
 	/// <summary>
 	/// 初期化
 	/// </summary>
